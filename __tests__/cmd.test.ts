@@ -1,9 +1,9 @@
 import { expect, test } from '@jest/globals';
-import { getCommand, isCommand } from '../src/utils/cmd';
+import { getCommand, isCommand, Commands } from '../src/utils/cmd';
 
 test('Get command from string', async () => {
 	const command = getCommand('terraform plan -d infra/terraform/mex -w dev');
-	expect(command).toBe('plan');
+	expect(command).toBe(Commands.Plan);
 });
 
 test('Check if given command is a terraform command', async () => {
