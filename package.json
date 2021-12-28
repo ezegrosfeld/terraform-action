@@ -2,6 +2,10 @@
 	"name": "terraform-action",
 	"version": "1.0.0",
 	"main": "lib/main.js",
+	"keywords": [
+		"terraform",
+		"action"
+	],
 	"scripts": {
 		"build": "tsc",
 		"test": "jest",
