@@ -39,14 +39,13 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const cmd_1 = __nccwpck_require__(9548);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
-        const body = github.context.payload;
+        const body = github.context.action;
         if (typeof body === 'undefined' || !body) {
             throw new Error('No issue body found');
         }
         core.info(`Body: ${body}`);
-        if (!(0, cmd_1.isCommand)((_a = body.issue) === null || _a === void 0 ? void 0 : _a.body)) {
+        if (!(0, cmd_1.isCommand)(body)) {
             core.info('No command found');
             return;
         }
