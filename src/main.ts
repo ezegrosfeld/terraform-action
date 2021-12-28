@@ -4,13 +4,12 @@ import { isCommand } from './utils/cmd';
 
 const run = async (): Promise<void> => {
 	try {
-		const body = github.context.payload.issue?.body;
-		if (!body) {
-			core.setFailed('No issue body found');
-			return;
+		const body = github.context.payload;
+		if (typeof body === 'undefined' || !body) {
+			throw new Error('No issue body found');
 		}
 		core.info(`Body: ${body}`);
-		if (!isCommand(body)) {
+		if (!isCommand(body.issue?.body!)) {
 			core.info('No command found');
 			return;
 		}
