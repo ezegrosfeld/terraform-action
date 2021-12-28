@@ -8,7 +8,7 @@ const run = async (): Promise<void> => {
 		if (typeof body === 'undefined' || !body) {
 			throw new Error('No issue body found');
 		}
-		core.info(`Body: ${body}`);
+		core.info(`Body is: ${body}`);
 		if (!isCommand(body)) {
 			core.info('No command found');
 			return;
