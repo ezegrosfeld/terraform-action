@@ -38,6 +38,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const cmd_1 = __nccwpck_require__(9548);
+const flags_1 = __nccwpck_require__(4912);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = github.context.payload.comment['body'];
@@ -49,6 +50,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             core.info('No command found');
             return;
         }
+        const command = (0, cmd_1.getCommand)(body);
+        core.info(`Running ${command}`);
+        if (command === cmd_1.Commands.Null) {
+            throw new Error('Invalid terraform commands');
+        }
+        const dir = (0, flags_1.getDir)(body);
+        core.info(`Directory is: ${dir}`);
+        const workspace = (0, flags_1.getWorkspace)(body);
+        core.info(`Workspace is: ${workspace}`);
     }
     catch (err) {
         if (err instanceof Error)
@@ -66,10 +76,30 @@ run();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isCommand = exports.getCommand = void 0;
+exports.isCommand = exports.getCommand = exports.Commands = void 0;
+var Commands;
+(function (Commands) {
+    Commands[Commands["Null"] = 0] = "Null";
+    Commands["Plan"] = "plan";
+    Commands["Apply"] = "apply";
+    Commands["PlanDestroy"] = "plan-destroy";
+    Commands["ApplyDestroy"] = "apply-destroy";
+})(Commands = exports.Commands || (exports.Commands = {}));
 const getCommand = (c) => {
     const command = c.match(/terraform\s(\w+)/);
-    return command ? command[1] : '';
+    const cmd = command ? command[1] : '';
+    switch (cmd) {
+        case Commands.Plan:
+            return Commands.Plan;
+        case Commands.Apply:
+            return Commands.Apply;
+        case Commands.PlanDestroy:
+            return Commands.PlanDestroy;
+        case Commands.ApplyDestroy:
+            return Commands.ApplyDestroy;
+        default:
+            return Commands.Null;
+    }
 };
 exports.getCommand = getCommand;
 const isCommand = (c) => {
@@ -77,6 +107,27 @@ const isCommand = (c) => {
     return command ? true : false;
 };
 exports.isCommand = isCommand;
+
+
+/***/ }),
+
+/***/ 4912:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getWorkspace = exports.getDir = void 0;
+const getDir = (c) => {
+    const dir = c.match(/-d\s(\w+\S+(\w))/);
+    return dir ? dir[1] : '';
+};
+exports.getDir = getDir;
+const getWorkspace = (c) => {
+    const workspace = c.match(/-w\s(\w+\S+(\w))/);
+    return workspace ? workspace[1] : '';
+};
+exports.getWorkspace = getWorkspace;
 
 
 /***/ }),
