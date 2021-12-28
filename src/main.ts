@@ -4,7 +4,7 @@ import { isCommand } from './utils/cmd';
 
 const run = async (): Promise<void> => {
 	try {
-		const body = github.context.action;
+		const body = github.context.payload.comment!['body'] as string;
 		if (typeof body === 'undefined' || !body) {
 			throw new Error('No issue body found');
 		}

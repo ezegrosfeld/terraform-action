@@ -40,7 +40,7 @@ const github = __importStar(__nccwpck_require__(5438));
 const cmd_1 = __nccwpck_require__(9548);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const body = github.context.action;
+        const body = github.context.payload.comment['body'];
         if (typeof body === 'undefined' || !body) {
             throw new Error('No issue body found');
         }
