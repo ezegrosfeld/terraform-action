@@ -1,6 +1,30 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 7431:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.apply = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const apply = () => {
+    (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+    });
+};
+exports.apply = apply;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -37,6 +61,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const terraform_1 = __nccwpck_require__(3620);
 const cmd_1 = __nccwpck_require__(9548);
 const flags_1 = __nccwpck_require__(4912);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -45,7 +70,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (typeof body === 'undefined' || !body) {
             throw new Error('No issue body found');
         }
-        core.info(`Body is: ${body}`);
         if (!(0, cmd_1.isCommand)(body)) {
             core.info('No command found');
             return;
@@ -59,6 +83,11 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         core.info(`Directory is: ${dir}`);
         const workspace = (0, flags_1.getWorkspace)(body);
         core.info(`Workspace is: ${workspace}`);
+        // react to comment event with rocket emoji
+        const emoji = 'rocket';
+        const gh = yield github.getOctokit(core.getInput('github_token'));
+        yield gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
+        (0, terraform_1.executeTerraform)(command, dir, workspace);
     }
     catch (err) {
         if (err instanceof Error)
@@ -66,6 +95,82 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 run();
+
+
+/***/ }),
+
+/***/ 5692:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.plan = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const plan = () => {
+    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+    });
+};
+exports.plan = plan;
+
+
+/***/ }),
+
+/***/ 3620:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.executeTerraform = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const apply_1 = __nccwpck_require__(7431);
+const plan_1 = __nccwpck_require__(5692);
+const cmd_1 = __nccwpck_require__(9548);
+const workspace_1 = __nccwpck_require__(1316);
+const executeTerraform = (cmd, dir, workspace) => {
+    try {
+        if (dir !== '') {
+            process.chdir(dir);
+        }
+        if (workspace !== '') {
+            (0, workspace_1.setWorkspace)(workspace);
+        }
+        switch (cmd) {
+            case cmd_1.Commands.Plan:
+                terraformInit();
+                (0, plan_1.plan)();
+                break;
+            case cmd_1.Commands.Apply:
+                (0, apply_1.apply)();
+                break;
+            default:
+                break;
+        }
+    }
+    catch (e) {
+        throw new Error(e);
+    }
+};
+exports.executeTerraform = executeTerraform;
+const terraformInit = () => {
+    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+    });
+};
 
 
 /***/ }),
@@ -128,6 +233,30 @@ const getWorkspace = (c) => {
     return workspace ? workspace[1] : '';
 };
 exports.getWorkspace = getWorkspace;
+
+
+/***/ }),
+
+/***/ 1316:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.setWorkspace = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const setWorkspace = (ws) => {
+    (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+    });
+};
+exports.setWorkspace = setWorkspace;
 
 
 /***/ }),
@@ -8417,6 +8546,14 @@ module.exports = eval("require")("encoding");
 
 "use strict";
 module.exports = require("assert");
+
+/***/ }),
+
+/***/ 2081:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("child_process");
 
 /***/ }),
 
