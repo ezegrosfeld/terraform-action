@@ -12,3 +12,5 @@ jobs:
 
       - uses: ./
         name: 'Run Terraform'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
