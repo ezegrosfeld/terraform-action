@@ -1,6 +1,8 @@
 import { exec } from 'child_process';
+import * as core from '@actions/core';
 
 export const setWorkspace = (ws: string) => {
+	core.startGroup('Terraform Workspace');
 	exec(
 		`terraform workspace select ${ws} || terraform workspace new ${ws}`,
 		(err, stdout, stderr) => {
@@ -15,4 +17,5 @@ export const setWorkspace = (ws: string) => {
 			console.log(stdout);
 		}
 	);
+	core.endGroup();
 };

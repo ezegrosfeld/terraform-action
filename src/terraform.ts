@@ -3,6 +3,7 @@ import { apply } from './apply';
 import { plan } from './plan';
 import { Commands } from './utils/cmd';
 import { setWorkspace } from './workspace';
+import * as core from '@actions/core';
 
 export const executeTerraform = (
 	cmd: Commands,
@@ -35,6 +36,7 @@ export const executeTerraform = (
 };
 
 const terraformInit = () => {
+	core.startGroup('Terraform Init');
 	exec('terraform init', (err, stdout, stderr) => {
 		if (err) {
 			throw new Error(err.message);
@@ -46,4 +48,5 @@ const terraformInit = () => {
 
 		console.log(stdout);
 	});
+	core.endGroup();
 };
