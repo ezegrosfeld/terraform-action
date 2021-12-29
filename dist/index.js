@@ -90,6 +90,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         (0, terraform_1.executeTerraform)(command, dir, workspace);
     }
     catch (err) {
+        console.log(err);
         if (err instanceof Error)
             core.setFailed(err.message);
     }
@@ -161,7 +162,7 @@ const executeTerraform = (cmd, dir, workspace) => {
 };
 exports.executeTerraform = executeTerraform;
 const terraformInit = () => {
-    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+    (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
         if (err) {
             throw new Error(err.message);
         }

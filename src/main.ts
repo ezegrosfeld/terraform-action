@@ -40,6 +40,7 @@ const run = async (): Promise<void> => {
 
 		executeTerraform(command, dir, workspace);
 	} catch (err) {
+		console.log(err);
 		if (err instanceof Error) core.setFailed(err.message);
 	}
 };

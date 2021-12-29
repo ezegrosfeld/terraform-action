@@ -35,7 +35,7 @@ export const executeTerraform = (
 };
 
 const terraformInit = () => {
-	exec('terraform plan', (err, stdout, stderr) => {
+	exec('terraform init', (err, stdout, stderr) => {
 		if (err) {
 			throw new Error(err.message);
 		}
