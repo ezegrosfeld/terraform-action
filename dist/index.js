@@ -33,9 +33,11 @@ const apply = () => {
     core.startGroup('Terraform Apply');
     (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
         if (err) {
+            console.error(err.message);
             throw new Error(err.message);
         }
         if (stderr) {
+            console.error(stderr);
             throw new Error(stderr);
         }
         console.log(stdout);
@@ -154,9 +156,11 @@ const plan = () => {
     core.startGroup('Terraform Plan');
     (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
         if (err) {
+            console.error(err.message);
             throw new Error(err.message);
         }
         if (stderr) {
+            console.error(stderr);
             throw new Error(stderr);
         }
         console.log(stdout);
@@ -229,9 +233,11 @@ const terraformInit = () => {
     core.startGroup('Terraform Init');
     (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
         if (err) {
+            console.error(err.message);
             throw new Error(err.message);
         }
         if (stderr) {
+            console.error(stderr);
             throw new Error(stderr);
         }
         console.log(stdout);
@@ -336,9 +342,11 @@ const setWorkspace = (ws) => {
     core.startGroup('Terraform Workspace');
     (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
         if (err) {
+            console.error(err.message);
             throw new Error(err.message);
         }
         if (stderr) {
+            console.error(stderr);
             throw new Error(stderr);
         }
         console.log(stdout);
