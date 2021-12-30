@@ -11,10 +11,11 @@ export const executeTerraform = (
 	workspace: string
 ): void => {
 	try {
-		core.info('Executing Terraform');
 		if (dir !== '') {
 			process.chdir(dir);
 		}
+
+		terraformInit();
 
 		if (workspace !== '') {
 			setWorkspace(workspace);
@@ -22,7 +23,6 @@ export const executeTerraform = (
 
 		switch (cmd) {
 			case Commands.Plan:
-				terraformInit();
 				plan();
 				break;
 			case Commands.Apply:
