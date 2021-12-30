@@ -5,28 +5,28 @@ import { Commands } from './utils/cmd';
 import { setWorkspace } from './workspace';
 import * as core from '@actions/core';
 
-export const executeTerraform = (
+export const executeTerraform = async (
 	cmd: Commands,
 	dir: string,
 	workspace: string
-): void => {
+): Promise<void> => {
 	try {
 		if (dir !== '') {
 			process.chdir(dir);
 		}
 
-		terraformInit();
+		await terraformInit();
 
 		if (workspace !== '') {
-			setWorkspace(workspace);
+			await setWorkspace(workspace);
 		}
 
 		switch (cmd) {
 			case Commands.Plan:
-				plan();
+				await plan();
 				break;
 			case Commands.Apply:
-				apply();
+				await apply();
 				break;
 			default:
 				break;
@@ -36,9 +36,9 @@ export const executeTerraform = (
 	}
 };
 
-const terraformInit = () => {
+const terraformInit = async () => {
 	core.startGroup('Terraform Init');
-	exec("echo 'HELO'", (err, stdout, stderr) => {
+	await exec('terraform init', (err, stdout, stderr) => {
 		if (err) {
 			throw new Error(err.message);
 		}

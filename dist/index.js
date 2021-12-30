@@ -109,7 +109,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const emoji = 'rocket';
         const gh = yield github.getOctokit(core.getInput('github_token'));
         yield gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
-        (0, terraform_1.executeTerraform)(command, dir, workspace);
+        yield (0, terraform_1.executeTerraform)(command, dir, workspace);
     }
     catch (err) {
         console.log(err);
@@ -146,13 +146,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.plan = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 const core = __importStar(__nccwpck_require__(2186));
-const plan = () => {
+const plan = () => __awaiter(void 0, void 0, void 0, function* () {
     core.startGroup('Terraform Plan');
-    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+    yield (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
         if (err) {
             throw new Error(err.message);
         }
@@ -162,7 +171,7 @@ const plan = () => {
         console.log(stdout);
     });
     core.endGroup();
-};
+});
 exports.plan = plan;
 
 
@@ -192,6 +201,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.executeTerraform = void 0;
 const child_process_1 = __nccwpck_require__(2081);
@@ -200,21 +218,21 @@ const plan_1 = __nccwpck_require__(5692);
 const cmd_1 = __nccwpck_require__(9548);
 const workspace_1 = __nccwpck_require__(1316);
 const core = __importStar(__nccwpck_require__(2186));
-const executeTerraform = (cmd, dir, workspace) => {
+const executeTerraform = (cmd, dir, workspace) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (dir !== '') {
             process.chdir(dir);
         }
-        terraformInit();
+        yield terraformInit();
         if (workspace !== '') {
-            (0, workspace_1.setWorkspace)(workspace);
+            yield (0, workspace_1.setWorkspace)(workspace);
         }
         switch (cmd) {
             case cmd_1.Commands.Plan:
-                (0, plan_1.plan)();
+                yield (0, plan_1.plan)();
                 break;
             case cmd_1.Commands.Apply:
-                (0, apply_1.apply)();
+                yield (0, apply_1.apply)();
                 break;
             default:
                 break;
@@ -223,11 +241,11 @@ const executeTerraform = (cmd, dir, workspace) => {
     catch (e) {
         throw new Error(e);
     }
-};
+});
 exports.executeTerraform = executeTerraform;
-const terraformInit = () => {
+const terraformInit = () => __awaiter(void 0, void 0, void 0, function* () {
     core.startGroup('Terraform Init');
-    (0, child_process_1.exec)("echo 'HELO'", (err, stdout, stderr) => {
+    yield (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
         if (err) {
             throw new Error(err.message);
         }
@@ -237,7 +255,7 @@ const terraformInit = () => {
         console.log(stdout);
     });
     core.endGroup();
-};
+});
 
 
 /***/ }),
@@ -328,13 +346,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.setWorkspace = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 const core = __importStar(__nccwpck_require__(2186));
-const setWorkspace = (ws) => {
+const setWorkspace = (ws) => __awaiter(void 0, void 0, void 0, function* () {
     core.startGroup('Terraform Workspace');
-    (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
+    yield (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
         if (err) {
             throw new Error(err.message);
         }
@@ -346,7 +373,7 @@ const setWorkspace = (ws) => {
         console.log(stdout);
     });
     core.endGroup();
-};
+});
 exports.setWorkspace = setWorkspace;
 
 

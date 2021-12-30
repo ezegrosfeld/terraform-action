@@ -38,7 +38,7 @@ const run = async (): Promise<void> => {
 			content: emoji
 		});
 
-		executeTerraform(command, dir, workspace);
+		await executeTerraform(command, dir, workspace);
 	} catch (err) {
 		console.log(err);
 		if (err instanceof Error) core.setFailed(err.message);

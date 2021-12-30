@@ -1,9 +1,9 @@
 import { exec } from 'child_process';
 import * as core from '@actions/core';
 
-export const setWorkspace = (ws: string) => {
+export const setWorkspace = async (ws: string) => {
 	core.startGroup('Terraform Workspace');
-	exec(
+	await exec(
 		`terraform workspace select ${ws} || terraform workspace new ${ws}`,
 		(err, stdout, stderr) => {
 			if (err) {
