@@ -202,6 +202,7 @@ const workspace_1 = __nccwpck_require__(1316);
 const core = __importStar(__nccwpck_require__(2186));
 const executeTerraform = (cmd, dir, workspace) => {
     try {
+        core.info('Executing Terraform');
         if (dir !== '') {
             process.chdir(dir);
         }
