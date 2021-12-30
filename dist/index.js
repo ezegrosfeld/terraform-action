@@ -341,6 +341,8 @@ const setWorkspace = (ws) => {
         if (stderr) {
             throw new Error(stderr);
         }
+        core.info(`Workspace set to ${ws}`);
+        core.info(stdout);
         console.log(stdout);
     });
     core.endGroup();
