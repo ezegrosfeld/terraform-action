@@ -38,7 +38,7 @@ export const executeTerraform = (
 
 const terraformInit = () => {
 	core.startGroup('Terraform Init');
-	exec('terraform init', (err, stdout, stderr) => {
+	exec("echo 'HELO'", (err, stdout, stderr) => {
 		if (err) {
 			throw new Error(err.message);
 		}

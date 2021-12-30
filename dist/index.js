@@ -227,7 +227,7 @@ const executeTerraform = (cmd, dir, workspace) => {
 exports.executeTerraform = executeTerraform;
 const terraformInit = () => {
     core.startGroup('Terraform Init');
-    (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
+    (0, child_process_1.exec)("echo 'HELO'", (err, stdout, stderr) => {
         if (err) {
             throw new Error(err.message);
         }
