@@ -11,6 +11,7 @@ export const executeTerraform = (
 	workspace: string
 ): void => {
 	try {
+		core.info('Executing Terraform');
 		if (dir !== '') {
 			process.chdir(dir);
 		}
