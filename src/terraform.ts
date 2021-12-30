@@ -12,6 +12,7 @@ export const executeTerraform = (
 ): void => {
 	try {
 		if (dir !== '') {
+			core.info(`Changing directory to ${dir}`);
 			process.chdir(dir);
 		}
 
