@@ -35,9 +35,9 @@ export const formatOutput = (output: string): string => {
 	output = output.replace(/\  \-/g, '-');
 	output = output.replace(/\  \+/g, '+');
 	output = output.replace(/\  \~/g, '!');
-	output = output.replace(/\    \-/g, '-\t');
-	output = output.replace(/\    \+/g, '+\t');
-	output = output.replace(/\    \~/g, '!\t');
+	output = output.replace(/\    \-/g, '-  ');
+	output = output.replace(/\    \+/g, '+  ');
+	output = output.replace(/\    \~/g, '!  ');
 	output = output.replace(/----/g, '====');
 	return output;
 };
