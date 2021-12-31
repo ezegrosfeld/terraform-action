@@ -193,14 +193,7 @@ class Terraform {
                 }
                 console.log(stdout);
                 // add comment to issue with plan
-                const comment = `
-			<details><summary>show output</summary>
-
-			\`\`\`
-			${(0, ouput_1.formatOutput)(stdout)}
-			\`\`\`
-
-			</details>`;
+                const comment = `<details><summary>show output</summary>\n\n\`\`\`\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
                 yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
                 core.endGroup();
             }));
