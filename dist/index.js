@@ -311,11 +311,10 @@ const formatOutput = (output) => {
     output = output.replace(/No changes. Your infrastructure still matches the configuration./g, '+ No changes. Your infrastructure still matches the configuration.');
     output = output.replace(/Refreshing state... /g, '');
     output = output.replace(/Error:/g, '- Error:');
-    output = output.replace(/\  \-/g, '-');
+    /* 	output = output.replace(/\  \-/g, '-');
     output = output.replace(/\  \+/g, '+');
-    output = output.replace(/\  \~/g, '!');
+    output = output.replace(/\  \~/g, '!'); */
     output = output.replace(/----/g, '====');
-    output = output.replace(/```/g, '');
     output = output.replace(/%0A/g, '\n\n');
     output = output.replace(/,/g, '');
     output = output.replace(/>/g, '');
