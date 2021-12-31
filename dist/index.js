@@ -136,10 +136,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const gh = yield github.getOctokit(core.getInput('github_token'));
         const terra = new terraform_1.Terraform(gh);
-        const body = github.context.payload.comment['body'];
-        if (typeof body === 'undefined' || !body) {
+        const comment = github.context.payload.comment;
+        if (typeof comment === 'undefined' || !comment) {
             yield (0, executions_1.runFromPR)(gh, terra);
+            return;
         }
+        const body = comment['body'];
         const workspace = (0, flags_1.getWorkspace)(body);
         core.info(`Workspace is: ${workspace}`);
         terra.workspace(workspace);
