@@ -85,7 +85,7 @@ export class Terraform {
 	};
 
 	#plan = () => {
-		exec('terraform plan -no-color', async (err, stdout, stderr) => {
+		exec('terraform plan', async (err, stdout, stderr) => {
 			core.startGroup('Terraform Plan');
 
 			if (err) {
