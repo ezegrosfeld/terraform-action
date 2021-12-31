@@ -85,7 +85,7 @@ export class Terraform {
 	};
 
 	#plan = () => {
-		exec('terraform plan', async (err, stdout, stderr) => {
+		exec('terraform plan -no-color', async (err, stdout, stderr) => {
 			core.startGroup('Terraform Plan');
 
 			if (err) {
@@ -100,7 +100,7 @@ export class Terraform {
 
 			// add comment to issue with plan
 			const comment = `<details><summary>show output</summary>
-					\`\`\`\n${formatOutput(stdout)}\`\`\`
+					\n${formatOutput(stdout)}
 			</details>`;
 
 			await this.#createComment('Terraform `plan`', comment);

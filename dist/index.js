@@ -183,7 +183,7 @@ class Terraform {
             });
         });
         _Terraform_plan.set(this, () => {
-            (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+            (0, child_process_1.exec)('terraform plan -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                 core.startGroup('Terraform Plan');
                 if (err) {
                     throw new Error(err.message);
@@ -194,7 +194,7 @@ class Terraform {
                 console.log(stdout);
                 // add comment to issue with plan
                 const comment = `<details><summary>show output</summary>
-					\`\`\`\n${(0, ouput_1.formatOutput)(stdout)}\`\`\`
+					\n${(0, ouput_1.formatOutput)(stdout)}
 			</details>`;
                 yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
                 core.endGroup();
