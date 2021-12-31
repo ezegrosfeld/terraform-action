@@ -1,7 +1,8 @@
 name: 'Terraform PR Action'
 description: 'Action for managing terraform'
-icon: 'chevron-right'
-color: 'blue'
+branding:
+  icon: 'chevron-right'
+  color: 'blue'
 inputs:
   github_token:
     required: true
