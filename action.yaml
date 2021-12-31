@@ -1,4 +1,4 @@
-name: 'Terraform Action'
+name: 'Terraform PR Action'
 description: 'Action for managing terraform'
 inputs:
   github_token:
