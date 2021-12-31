@@ -144,7 +144,7 @@ class Terraform {
                         __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
                         break;
                     case cmd_1.Commands.Apply:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_apply, "f"));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_plan, "f").call(this, false, __classPrivateFieldGet(this, _Terraform_apply, "f")));
                         break;
                     default:
                         break;
@@ -165,7 +165,12 @@ class Terraform {
                 }
                 console.log(stdout);
                 core.endGroup();
-                __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
+                try {
+                    __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
+                }
+                catch (e) {
+                    throw new Error(e);
+                }
             });
         });
         _Terraform_setWorkspace.set(this, (fn) => {
@@ -179,10 +184,15 @@ class Terraform {
                 }
                 console.log(stdout);
                 core.endGroup();
-                fn();
+                try {
+                    fn();
+                }
+                catch (e) {
+                    throw new Error(e);
+                }
             });
         });
-        _Terraform_plan.set(this, () => {
+        _Terraform_plan.set(this, (comment = true, fn) => {
             (0, child_process_1.exec)('terraform plan -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                 core.startGroup('Terraform Plan');
                 if (err) {
@@ -193,8 +203,16 @@ class Terraform {
                 }
                 console.log(stdout);
                 // add comment to issue with plan
-                const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
-                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
+                if (comment) {
+                    const msg = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', msg);
+                }
+                try {
+                    typeof fn !== 'undefined' && fn();
+                }
+                catch (e) {
+                    throw new Error(e);
+                }
                 core.endGroup();
             }));
         });

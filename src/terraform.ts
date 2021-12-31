@@ -35,7 +35,7 @@ export class Terraform {
 					this.#terraformInit(this.#plan);
 					break;
 				case Commands.Apply:
-					this.#terraformInit(this.#apply);
+					this.#terraformInit(() => this.#plan(false, this.#apply));
 					break;
 				default:
 					break;
@@ -58,7 +58,11 @@ export class Terraform {
 
 			console.log(stdout);
 			core.endGroup();
-			this.#setWorkspace(fn);
+			try {
+				this.#setWorkspace(fn);
+			} catch (e: any) {
+				throw new Error(e);
+			}
 		});
 	};
 
@@ -79,12 +83,16 @@ export class Terraform {
 
 				console.log(stdout);
 				core.endGroup();
-				fn();
+				try {
+					fn();
+				} catch (e: any) {
+					throw new Error(e);
+				}
 			}
 		);
 	};
 
-	#plan = () => {
+	#plan = (comment: boolean = true, fn?: () => void) => {
 		exec('terraform plan -no-color', async (err, stdout, stderr) => {
 			core.startGroup('Terraform Plan');
 
@@ -99,11 +107,19 @@ export class Terraform {
 			console.log(stdout);
 
 			// add comment to issue with plan
-			const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
-				stdout
-			)}\n\`\`\`\n\n</details>`;
+			if (comment) {
+				const msg = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
+					stdout
+				)}\n\`\`\`\n\n</details>`;
 
-			await this.#createComment('Terraform `plan`', comment);
+				await this.#createComment('Terraform `plan`', msg);
+			}
+
+			try {
+				typeof fn !== 'undefined' && fn();
+			} catch (e: any) {
+				throw new Error(e);
+			}
 
 			core.endGroup();
 		});
