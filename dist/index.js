@@ -1,6 +1,52 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 7431:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.apply = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const core = __importStar(__nccwpck_require__(2186));
+const apply = () => {
+    (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
+        core.startGroup('Terraform Apply');
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+        core.endGroup();
+    });
+};
+exports.apply = apply;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -76,6 +122,52 @@ run();
 
 /***/ }),
 
+/***/ 5692:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.plan = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const core = __importStar(__nccwpck_require__(2186));
+const plan = () => {
+    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+        core.startGroup('Terraform Plan');
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+        core.endGroup();
+    });
+};
+exports.plan = plan;
+
+
+/***/ }),
+
 /***/ 3620:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -112,36 +204,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.executeTerraform = void 0;
 const child_process_1 = __nccwpck_require__(2081);
+const apply_1 = __nccwpck_require__(7431);
+const plan_1 = __nccwpck_require__(5692);
+const cmd_1 = __nccwpck_require__(9548);
+const workspace_1 = __nccwpck_require__(1316);
 const core = __importStar(__nccwpck_require__(2186));
 const executeTerraform = (cmd, dir, workspace) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        if (dir !== '') {
-            process.chdir(dir);
+        let ws = 'dev';
+        if (workspace !== '') {
+            ws = workspace;
         }
-        yield terraformInit();
-        /* if (workspace !== '') {
-            await setWorkspace(workspace);
-        }
-
         switch (cmd) {
-            case Commands.Plan:
-                await plan();
-                break;
-            case Commands.Apply:
-                await apply();
-                break;
+            case cmd_1.Commands.Plan:
+                terraformInit(ws, plan_1.plan);
+            case cmd_1.Commands.Apply:
+                terraformInit(ws, apply_1.apply);
             default:
                 break;
-        } */
+        }
     }
     catch (e) {
         throw new Error(e);
     }
 });
 exports.executeTerraform = executeTerraform;
-const terraformInit = () => __awaiter(void 0, void 0, void 0, function* () {
+const terraformInit = (ws, fn) => {
     core.startGroup('Terraform Init');
-    yield (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
+    (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
         if (err) {
             throw new Error(err.message);
         }
@@ -149,9 +239,10 @@ const terraformInit = () => __awaiter(void 0, void 0, void 0, function* () {
             throw new Error(stderr);
         }
         console.log(stdout);
+        core.endGroup();
+        (0, workspace_1.setWorkspace)(ws, fn);
     });
-    core.endGroup();
-});
+};
 
 
 /***/ }),
@@ -214,6 +305,53 @@ const getWorkspace = (c) => {
     return workspace ? workspace[1] : '';
 };
 exports.getWorkspace = getWorkspace;
+
+
+/***/ }),
+
+/***/ 1316:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.setWorkspace = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const core = __importStar(__nccwpck_require__(2186));
+const setWorkspace = (ws, fn) => {
+    (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
+        core.startGroup('Terraform Workspace');
+        if (err) {
+            throw new Error(err.message);
+        }
+        if (stderr) {
+            throw new Error(stderr);
+        }
+        console.log(stdout);
+        core.endGroup();
+        fn();
+    });
+};
+exports.setWorkspace = setWorkspace;
 
 
 /***/ }),

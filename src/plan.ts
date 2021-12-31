@@ -1,9 +1,10 @@
 import { exec } from 'child_process';
 import * as core from '@actions/core';
 
-export const plan = async () => {
-	core.startGroup('Terraform Plan');
-	await exec('terraform plan', (err, stdout, stderr) => {
+export const plan = () => {
+	exec('terraform plan', (err, stdout, stderr) => {
+		core.startGroup('Terraform Plan');
+
 		if (err) {
 			throw new Error(err.message);
 		}
@@ -13,6 +14,6 @@ export const plan = async () => {
 		}
 
 		console.log(stdout);
+		core.endGroup();
 	});
-	core.endGroup();
 };

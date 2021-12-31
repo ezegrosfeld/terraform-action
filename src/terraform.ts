@@ -11,34 +11,27 @@ export const executeTerraform = async (
 	workspace: string
 ): Promise<void> => {
 	try {
-		if (dir !== '') {
-			process.chdir(dir);
-		}
-
-		await terraformInit();
-
-		/* if (workspace !== '') {
-			await setWorkspace(workspace);
+		let ws = 'dev';
+		if (workspace !== '') {
+			ws = workspace;
 		}
 
 		switch (cmd) {
 			case Commands.Plan:
-				await plan();
-				break;
+				terraformInit(ws, plan);
 			case Commands.Apply:
-				await apply();
-				break;
+				terraformInit(ws, apply);
 			default:
 				break;
-		} */
+		}
 	} catch (e: any) {
 		throw new Error(e);
 	}
 };
 
-const terraformInit = async () => {
+const terraformInit = (ws: string, fn: () => void) => {
 	core.startGroup('Terraform Init');
-	await exec('terraform init', (err, stdout, stderr) => {
+	exec('terraform init', (err, stdout, stderr) => {
 		if (err) {
 			throw new Error(err.message);
 		}
@@ -48,6 +41,7 @@ const terraformInit = async () => {
 		}
 
 		console.log(stdout);
+		core.endGroup();
+		setWorkspace(ws, fn);
 	});
-	core.endGroup();
 };
