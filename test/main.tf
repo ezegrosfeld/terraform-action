@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-
 provider "github" {
     owner = "ezedh"
 }
