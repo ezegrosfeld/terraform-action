@@ -230,13 +230,13 @@ class Terraform {
                         __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
                         break;
                     case cmd_1.Commands.Apply:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_plan, "f").call(this, false, __classPrivateFieldGet(this, _Terraform_apply, "f")));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_apply, "f"));
                         break;
                     case cmd_1.Commands.PlanDestroy:
                         __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_planDestroy, "f"));
                         break;
                     case cmd_1.Commands.ApplyDestroy:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_planDestroy, "f").call(this, false, __classPrivateFieldGet(this, _Terraform_applyDestroy, "f")));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_apply, "f"));
                         break;
                     default:
                         break;

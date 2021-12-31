@@ -39,15 +39,13 @@ export class Terraform {
 					this.#terraformInit(this.#plan);
 					break;
 				case Commands.Apply:
-					this.#terraformInit(() => this.#plan(false, this.#apply));
+					this.#terraformInit(() => this.#apply);
 					break;
 				case Commands.PlanDestroy:
 					this.#terraformInit(this.#planDestroy);
 					break;
 				case Commands.ApplyDestroy:
-					this.#terraformInit(() =>
-						this.#planDestroy(false, this.#applyDestroy)
-					);
+					this.#terraformInit(() => this.#apply);
 					break;
 				default:
 					break;
