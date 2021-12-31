@@ -3,6 +3,8 @@ on:
   issue_comment:
     types:
       - 'created'
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
 jobs:
   terraform:
     runs-on: ubuntu-latest

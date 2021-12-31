@@ -1,44 +1,25 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { executeTerraform } from './terraform';
-import { Commands, getCommand, isCommand } from './utils/cmd';
-import { getDir, getWorkspace } from './utils/flags';
+import { runFromComment, runFromPR } from './executions';
+import { Terraform } from './terraform';
+import { getWorkspace } from './utils/flags';
 
 const run = async (): Promise<void> => {
 	try {
+		const gh = await github.getOctokit(core.getInput('github_token'));
+		const terra = new Terraform(gh);
+
 		const body = github.context.payload.comment!['body'] as string;
 		if (typeof body === 'undefined' || !body) {
-			throw new Error('No issue body found');
+			await runFromPR(gh, terra);
 		}
-		if (!isCommand(body)) {
-			core.info('No command found');
-			return;
-		}
-
-		const command = getCommand(body);
-		core.info(`Running ${command}`);
-
-		if (command === Commands.Null) {
-			throw new Error('Invalid terraform commands');
-		}
-
-		const dir = getDir(body);
-		core.info(`Directory is: ${dir}`);
 
 		const workspace = getWorkspace(body);
 		core.info(`Workspace is: ${workspace}`);
 
-		// react to comment event with rocket emoji
-		const emoji = 'rocket';
-		const gh = await github.getOctokit(core.getInput('github_token'));
+		terra.workspace(workspace);
 
-		await gh.rest.reactions.createForIssueComment({
-			...github.context.repo,
-			comment_id: github.context.payload.comment!.id,
-			content: emoji
-		});
-
-		executeTerraform(command, dir, workspace);
+		await runFromComment(body, gh, terra);
 	} catch (err) {
 		console.log(err);
 		if (err instanceof Error) core.setFailed(err.message);

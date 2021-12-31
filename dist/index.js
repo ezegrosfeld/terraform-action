@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 7431:
+/***/ 9485:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -25,24 +25,70 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.apply = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const core = __importStar(__nccwpck_require__(2186));
-const apply = () => {
-    core.startGroup('Terraform Apply');
-    (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-    core.endGroup();
 };
-exports.apply = apply;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.runFromPR = exports.runFromComment = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const cmd_1 = __nccwpck_require__(9548);
+const flags_1 = __nccwpck_require__(4912);
+const runFromComment = (body, gh, terra) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!(0, cmd_1.isCommand)(body)) {
+            core.info('No command found');
+            return;
+        }
+        const command = (0, cmd_1.getCommand)(body);
+        core.info(`Running ${command}`);
+        if (command === cmd_1.Commands.Null) {
+            throw new Error('Invalid terraform commands');
+        }
+        const dir = (0, flags_1.getDir)(body);
+        core.info(`Directory is: ${dir}`);
+        // react to comment event with rocket emoji
+        const emoji = 'rocket';
+        gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
+        yield terra.executeTerraform(command, dir);
+    }
+    catch (err) {
+        console.log(err);
+        if (err instanceof Error)
+            core.setFailed(err.message);
+    }
+});
+exports.runFromComment = runFromComment;
+const runFromPR = (gh, terra) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Get PR number and modified files
+        const pr = github.context.payload.pull_request;
+        const prNumber = pr.number;
+        const files = yield gh.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: prNumber }));
+        // Get directories that have .tf files
+        const dirs = files.data
+            .map((file) => file.filename)
+            .filter((file) => file.endsWith('.tf'));
+        // Get only the directory path
+        const dir = dirs.map((dir) => dir.split('/').slice(0, -1).join('/'));
+        // for each directory run terraform plan
+        for (const d of dir) {
+            yield terra.executeTerraform(cmd_1.Commands.Plan, d);
+        }
+    }
+    catch (err) {
+        console.log(err);
+        if (err instanceof Error)
+            core.setFailed(err.message);
+    }
+});
+exports.runFromPR = runFromPR;
 
 
 /***/ }),
@@ -83,33 +129,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const executions_1 = __nccwpck_require__(9485);
 const terraform_1 = __nccwpck_require__(3620);
-const cmd_1 = __nccwpck_require__(9548);
 const flags_1 = __nccwpck_require__(4912);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const gh = yield github.getOctokit(core.getInput('github_token'));
+        const terra = new terraform_1.Terraform(gh);
         const body = github.context.payload.comment['body'];
         if (typeof body === 'undefined' || !body) {
-            throw new Error('No issue body found');
+            yield (0, executions_1.runFromPR)(gh, terra);
         }
-        if (!(0, cmd_1.isCommand)(body)) {
-            core.info('No command found');
-            return;
-        }
-        const command = (0, cmd_1.getCommand)(body);
-        core.info(`Running ${command}`);
-        if (command === cmd_1.Commands.Null) {
-            throw new Error('Invalid terraform commands');
-        }
-        const dir = (0, flags_1.getDir)(body);
-        core.info(`Directory is: ${dir}`);
         const workspace = (0, flags_1.getWorkspace)(body);
         core.info(`Workspace is: ${workspace}`);
-        // react to comment event with rocket emoji
-        const emoji = 'rocket';
-        const gh = yield github.getOctokit(core.getInput('github_token'));
-        yield gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
-        (0, terraform_1.executeTerraform)(command, dir, workspace);
+        terra.workspace(workspace);
+        yield (0, executions_1.runFromComment)(body, gh, terra);
     }
     catch (err) {
         console.log(err);
@@ -118,52 +152,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 run();
-
-
-/***/ }),
-
-/***/ 5692:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.plan = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const core = __importStar(__nccwpck_require__(2186));
-const plan = () => {
-    core.startGroup('Terraform Plan');
-    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
-    });
-    core.endGroup();
-};
-exports.plan = plan;
 
 
 /***/ }),
@@ -192,52 +180,198 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.executeTerraform = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const apply_1 = __nccwpck_require__(7431);
-const plan_1 = __nccwpck_require__(5692);
-const cmd_1 = __nccwpck_require__(9548);
-const workspace_1 = __nccwpck_require__(1316);
-const core = __importStar(__nccwpck_require__(2186));
-const executeTerraform = (cmd, dir, workspace) => {
-    try {
-        if (dir !== '') {
-            process.chdir(dir);
-        }
-        if (workspace !== '') {
-            (0, workspace_1.setWorkspace)(workspace);
-        }
-        switch (cmd) {
-            case cmd_1.Commands.Plan:
-                terraformInit();
-                (0, plan_1.plan)();
-                break;
-            case cmd_1.Commands.Apply:
-                (0, apply_1.apply)();
-                break;
-            default:
-                break;
-        }
-    }
-    catch (e) {
-        throw new Error(e);
-    }
-};
-exports.executeTerraform = executeTerraform;
-const terraformInit = () => {
-    core.startGroup('Terraform Init');
-    (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-    core.endGroup();
 };
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _Terraform_client, _Terraform_workspace, _Terraform_terraformInit, _Terraform_setWorkspace, _Terraform_plan, _Terraform_apply, _Terraform_planDestroy, _Terraform_applyDestroy, _Terraform_createComment, _Terraform_buildOutputDetails;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Terraform = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const cmd_1 = __nccwpck_require__(9548);
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const ouput_1 = __nccwpck_require__(1102);
+class Terraform {
+    constructor(client) {
+        _Terraform_client.set(this, void 0);
+        _Terraform_workspace.set(this, void 0);
+        this.workspace = (workspace) => {
+            __classPrivateFieldSet(this, _Terraform_workspace, workspace, "f");
+        };
+        this.executeTerraform = (cmd, dir) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (dir !== '') {
+                    core.info(`Changing directory to ${dir}`);
+                    process.chdir(dir);
+                }
+                switch (cmd) {
+                    case cmd_1.Commands.Plan:
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
+                        break;
+                    case cmd_1.Commands.Apply:
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_plan, "f").call(this, false, __classPrivateFieldGet(this, _Terraform_apply, "f")));
+                        break;
+                    case cmd_1.Commands.PlanDestroy:
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_planDestroy, "f"));
+                        break;
+                    case cmd_1.Commands.ApplyDestroy:
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, () => __classPrivateFieldGet(this, _Terraform_planDestroy, "f").call(this, false, __classPrivateFieldGet(this, _Terraform_applyDestroy, "f")));
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (e) {
+                throw new Error(e);
+            }
+        });
+        _Terraform_terraformInit.set(this, (fn) => {
+            (0, child_process_1.exec)('terraform init -input=false', (err, stdout, stderr) => {
+                core.startGroup('Terraform Init');
+                if (err) {
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    throw new Error(stderr);
+                }
+                core.info(stdout);
+                core.endGroup();
+                __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
+            });
+        });
+        _Terraform_setWorkspace.set(this, (fn) => {
+            (0, child_process_1.exec)(`terraform workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
+                core.startGroup('Terraform Workspace');
+                if (err) {
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    throw new Error(stderr);
+                }
+                core.info(stdout);
+                core.endGroup();
+                fn();
+            });
+        });
+        _Terraform_plan.set(this, (comment = true, fn) => {
+            (0, child_process_1.exec)('terraform plan -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                core.startGroup('Terraform Plan');
+                if (err) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
+                    throw new Error(stderr);
+                }
+                core.info(stdout);
+                // add comment to issue with plan
+                if (comment) {
+                    const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', msg);
+                }
+                typeof fn !== 'undefined' && fn();
+                core.endGroup();
+            }));
+        });
+        _Terraform_apply.set(this, () => {
+            (0, child_process_1.exec)('terraform apply -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                core.startGroup('Terraform Apply');
+                if (err) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
+                    throw new Error(stderr);
+                }
+                const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
+                core.info(stdout);
+                core.endGroup();
+            }));
+        });
+        _Terraform_planDestroy.set(this, (comment = true, fn) => {
+            (0, child_process_1.exec)('terraform plan -destroy -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                core.startGroup('Terraform Plan Destroy');
+                if (err) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
+                    throw new Error(stderr);
+                }
+                core.info(stdout);
+                // add comment to issue with plan
+                if (comment) {
+                    const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy`', msg);
+                }
+                typeof fn !== 'undefined' && fn();
+                core.endGroup();
+            }));
+        });
+        _Terraform_applyDestroy.set(this, () => {
+            (0, child_process_1.exec)('terraform apply -destroy -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                core.startGroup('Terraform Apply Destroy');
+                if (err) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
+                    throw new Error(stderr);
+                }
+                const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy`', comment);
+                core.info(stdout);
+                core.endGroup();
+            }));
+        });
+        _Terraform_createComment.set(this, (title, comment) => __awaiter(this, void 0, void 0, function* () {
+            const msg = `## ${title}: \n\n${comment}`;
+            yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.createComment({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: github.context.issue.number,
+                body: msg
+            });
+        }));
+        _Terraform_buildOutputDetails.set(this, (details) => {
+            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n\`\`\`\n\n</details>`;
+        });
+        __classPrivateFieldSet(this, _Terraform_client, client, "f");
+        __classPrivateFieldSet(this, _Terraform_workspace, 'dev', "f");
+    }
+}
+exports.Terraform = Terraform;
+_Terraform_client = new WeakMap(), _Terraform_workspace = new WeakMap(), _Terraform_terraformInit = new WeakMap(), _Terraform_setWorkspace = new WeakMap(), _Terraform_plan = new WeakMap(), _Terraform_apply = new WeakMap(), _Terraform_planDestroy = new WeakMap(), _Terraform_applyDestroy = new WeakMap(), _Terraform_createComment = new WeakMap(), _Terraform_buildOutputDetails = new WeakMap();
 
 
 /***/ }),
@@ -304,50 +438,39 @@ exports.getWorkspace = getWorkspace;
 
 /***/ }),
 
-/***/ 1316:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 1102:
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setWorkspace = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const core = __importStar(__nccwpck_require__(2186));
-const setWorkspace = (ws) => {
-    core.startGroup('Terraform Workspace');
-    (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        core.info(`Workspace set to ${ws}`);
-        core.info(stdout);
-        console.log(stdout);
-    });
-    core.endGroup();
+exports.formatOutput = void 0;
+const formatOutput = (output) => {
+    // remove all commands that have :: in them
+    const outputLines = output.split('\n').filter((line) => !line.includes('::'));
+    // remove the first line
+    const formattedLines = outputLines.slice(1);
+    // join the remaining lines
+    output = formattedLines.join('\n');
+    output = output.replace(/[\u001b\u009b][[()#;?](?:[0-9]{1,4}(?:;[0-9]{0,4}))?[0-9A-ORZcf-nqry=><]/g, '');
+    output = output.replace(/No changes. No objects need to be destroyed./g, '+ No changes. No objects need to be destroyed.');
+    output = output.replace(/No changes. Infrastructure is up-to-date./g, '+ No changes. Infrastructure is up-to-date.');
+    output = output.replace(/Destroy complete!/g, '- Destroy complete!');
+    output = output.replace(/Apply complete!/g, '+ Apply complete!');
+    output = output.replace(/No changes. Your infrastructure matches the configuration./g, '+ No changes. Your infrastructure matches the configuration.');
+    output = output.replace(/No changes. Your infrastructure still matches the configuration./g, '+ No changes. Your infrastructure still matches the configuration.');
+    output = output.replace(/Refreshing state... /g, '');
+    output = output.replace(/Error:/g, '- Error:');
+    output = output.replace(/\  \-/g, '-');
+    output = output.replace(/\  \+/g, '+');
+    output = output.replace(/\  \~/g, '!');
+    output = output.replace(/\    \-/g, '-  ');
+    output = output.replace(/\    \+/g, '+  ');
+    output = output.replace(/\    \~/g, '!  ');
+    output = output.replace(/----/g, '====');
+    return output;
 };
-exports.setWorkspace = setWorkspace;
+exports.formatOutput = formatOutput;
 
 
 /***/ }),
