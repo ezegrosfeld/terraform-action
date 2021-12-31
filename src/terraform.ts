@@ -99,7 +99,7 @@ export class Terraform {
 			console.log(stdout);
 
 			// add comment to issue with plan
-			const comment = `<details><summary>show output</summary>\n\n\`\`\`\n${formatOutput(
+			const comment = `<details><summary>show output</summary>\n\n\`\`\`diff\n${formatOutput(
 				stdout
 			)}\n\`\`\`\n\n</details>`;
 

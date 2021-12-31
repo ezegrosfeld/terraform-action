@@ -1,5 +1,17 @@
 export const formatOutput = (output: string): string => {
-	/* output = output.replace(
+	// remove all commands that have :: in them
+	const outputLines = output.split('\n').filter((line) => !line.includes('::'));
+
+	// remove empty lines
+	const filteredLines = outputLines.filter((line) => line.length > 0);
+
+	// remove the first line
+	const formattedLines = filteredLines.slice(1);
+
+	// join the remaining lines
+	output = formattedLines.join('\n');
+
+	output = output.replace(
 		/[\u001b\u009b][[()#;?](?:[0-9]{1,4}(?:;[0-9]{0,4}))?[0-9A-ORZcf-nqry=><]/g,
 		''
 	);
@@ -22,22 +34,10 @@ export const formatOutput = (output: string): string => {
 		'+ No changes. Your infrastructure still matches the configuration.'
 	);
 	output = output.replace(/Refreshing state... /g, '');
-	output = output.replace(/Error:/g, '- Error:'); */
-	/* 	output = output.replace(/\  \-/g, '-');
+	output = output.replace(/Error:/g, '- Error:');
+	output = output.replace(/\  \-/g, '-');
 	output = output.replace(/\  \+/g, '+');
-	output = output.replace(/\  \~/g, '!'); */
-	/* 	output = output.replace(/----/g, '====');
-	output = output.replace(/%0A/g, '\n\n');
-
-	output = output.replace(/,/g, '');
-	output = output.replace(/>/g, '');
-	output = output.replace(/Feature:/g, '\n\n> Feature:');
-	output = output.replace(/Failure:/g, '- Failure:');
-	output = output.replace(/Scenario:/g, '> Scenario:'); */
-	/* 	output = output.replace(/\s\s+[+]/g, '\n+');
-	output = output.replace(/\s\s+[!]/g, '\n!');
-	output = output.replace(/\s\s+[-]/g, '\n-');
-	output = output.replace(/\s\s+[>]/g, '\n>'); */
-
+	output = output.replace(/\  \~/g, '!');
+	output = output.replace(/----/g, '====');
 	return output;
 };
