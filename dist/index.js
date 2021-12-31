@@ -211,6 +211,10 @@ const workspace_1 = __nccwpck_require__(1316);
 const core = __importStar(__nccwpck_require__(2186));
 const executeTerraform = (cmd, dir, workspace) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        if (dir !== '') {
+            core.info(`Changing directory to ${dir}`);
+            process.chdir(dir);
+        }
         let ws = 'dev';
         if (workspace !== '') {
             ws = workspace;
@@ -230,8 +234,8 @@ const executeTerraform = (cmd, dir, workspace) => __awaiter(void 0, void 0, void
 });
 exports.executeTerraform = executeTerraform;
 const terraformInit = (ws, fn) => {
-    core.startGroup('Terraform Init');
     (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
+        core.startGroup('Terraform Init');
         if (err) {
             throw new Error(err.message);
         }

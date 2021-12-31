@@ -11,6 +11,11 @@ export const executeTerraform = async (
 	workspace: string
 ): Promise<void> => {
 	try {
+		if (dir !== '') {
+			core.info(`Changing directory to ${dir}`);
+			process.chdir(dir);
+		}
+
 		let ws = 'dev';
 		if (workspace !== '') {
 			ws = workspace;
@@ -30,8 +35,8 @@ export const executeTerraform = async (
 };
 
 const terraformInit = (ws: string, fn: () => void) => {
-	core.startGroup('Terraform Init');
 	exec('terraform init', (err, stdout, stderr) => {
+		core.startGroup('Terraform Init');
 		if (err) {
 			throw new Error(err.message);
 		}
