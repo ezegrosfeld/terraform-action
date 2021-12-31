@@ -34,7 +34,7 @@ export class Terraform {
 					this.#terraformInit(this.#plan);
 					break;
 				case Commands.Apply:
-					this.#terraformInit(this.#plan);
+					this.#terraformInit(this.#apply);
 					break;
 				default:
 					break;
@@ -84,7 +84,7 @@ export class Terraform {
 	};
 
 	#plan = () => {
-		exec('terraform plan', (err, stdout, stderr) => {
+		exec('terraform plan -no-color', async (err, stdout, stderr) => {
 			core.startGroup('Terraform Plan');
 
 			if (err) {
@@ -98,19 +98,11 @@ export class Terraform {
 			console.log(stdout);
 
 			// add comment to issue with plan
-			const comment = `
-				<details>
-					<summary>Terraform Plan</summary>
-					<pre>\`\`\`${stdout}\`\`\`</pre>
-				</details>
-			`;
+			const comment = `<details><summary>show output</summary>
+					\`\`\`\n${stdout}\`\`\`
+			</details>`;
 
-			this.#client.rest.issues.createComment({
-				owner: github.context.repo.owner,
-				repo: github.context.repo.repo,
-				issue_number: github.context.issue.number,
-				body: comment
-			});
+			await this.#createComment('Terraform `plan`', comment);
 
 			core.endGroup();
 		});
@@ -131,5 +123,40 @@ export class Terraform {
 			console.log(stdout);
 			core.endGroup();
 		});
+	};
+
+	#createComment = async (title: string, comment: string) => {
+		const msg = `## ${title}: \n\n${comment}`;
+
+		const comments = await this.#client.rest.issues.listComments({
+			...github.context.repo,
+			issue_number: github.context.issue.number
+		});
+
+		let previousCommentId: number | null = null;
+
+		for (const comment of comments.data) {
+			if (
+				comment.user!.login === 'github-actions[bot]' &&
+				comment.body!.startsWith(`## ${title}:`)
+			) {
+				previousCommentId = comment.id;
+			}
+		}
+
+		if (previousCommentId) {
+			await this.#client.rest.issues.updateComment({
+				...github.context.repo,
+				comment_id: previousCommentId,
+				body: msg
+			});
+		} else {
+			await this.#client.rest.issues.createComment({
+				owner: github.context.repo.owner,
+				repo: github.context.repo.repo,
+				issue_number: github.context.issue.number,
+				body: msg
+			});
+		}
 	};
 }

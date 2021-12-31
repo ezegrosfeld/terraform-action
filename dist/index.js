@@ -121,7 +121,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _Terraform_client, _Terraform_workspace, _Terraform_terraformInit, _Terraform_setWorkspace, _Terraform_plan, _Terraform_apply;
+var _Terraform_client, _Terraform_workspace, _Terraform_terraformInit, _Terraform_setWorkspace, _Terraform_plan, _Terraform_apply, _Terraform_createComment;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Terraform = void 0;
 const child_process_1 = __nccwpck_require__(2081);
@@ -143,7 +143,7 @@ class Terraform {
                         __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
                         break;
                     case cmd_1.Commands.Apply:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_apply, "f"));
                         break;
                     default:
                         break;
@@ -182,7 +182,7 @@ class Terraform {
             });
         });
         _Terraform_plan.set(this, () => {
-            (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+            (0, child_process_1.exec)('terraform plan -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                 core.startGroup('Terraform Plan');
                 if (err) {
                     throw new Error(err.message);
@@ -192,20 +192,12 @@ class Terraform {
                 }
                 console.log(stdout);
                 // add comment to issue with plan
-                const comment = `
-				<details>
-					<summary>Terraform Plan</summary>
-					<pre>\`\`\`${stdout}\`\`\`</pre>
-				</details>
-			`;
-                __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.createComment({
-                    owner: github.context.repo.owner,
-                    repo: github.context.repo.repo,
-                    issue_number: github.context.issue.number,
-                    body: comment
-                });
+                const comment = `<details><summary>show output</summary>
+					\`\`\`\n${stdout}\`\`\`
+			</details>`;
+                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
                 core.endGroup();
-            });
+            }));
         });
         _Terraform_apply.set(this, () => {
             (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
@@ -220,12 +212,34 @@ class Terraform {
                 core.endGroup();
             });
         });
+        _Terraform_createComment.set(this, (title, comment) => __awaiter(this, void 0, void 0, function* () {
+            const msg = `## ${title}: \n\n${comment}`;
+            const comments = yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.listComments(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number }));
+            let previousCommentId = null;
+            for (const comment of comments.data) {
+                if (comment.user.login === 'github-actions[bot]' &&
+                    comment.body.startsWith(`## ${title}:`)) {
+                    previousCommentId = comment.id;
+                }
+            }
+            if (previousCommentId) {
+                yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: previousCommentId, body: msg }));
+            }
+            else {
+                yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.createComment({
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    issue_number: github.context.issue.number,
+                    body: msg
+                });
+            }
+        }));
         __classPrivateFieldSet(this, _Terraform_client, client, "f");
         __classPrivateFieldSet(this, _Terraform_workspace, workspace, "f");
     }
 }
 exports.Terraform = Terraform;
-_Terraform_client = new WeakMap(), _Terraform_workspace = new WeakMap(), _Terraform_terraformInit = new WeakMap(), _Terraform_setWorkspace = new WeakMap(), _Terraform_plan = new WeakMap(), _Terraform_apply = new WeakMap();
+_Terraform_client = new WeakMap(), _Terraform_workspace = new WeakMap(), _Terraform_terraformInit = new WeakMap(), _Terraform_setWorkspace = new WeakMap(), _Terraform_plan = new WeakMap(), _Terraform_apply = new WeakMap(), _Terraform_createComment = new WeakMap();
 
 
 /***/ }),
