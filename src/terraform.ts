@@ -129,35 +129,11 @@ export class Terraform {
 	#createComment = async (title: string, comment: string) => {
 		const msg = `## ${title}: \n\n${comment}`;
 
-		const comments = await this.#client.rest.issues.listComments({
-			...github.context.repo,
-			issue_number: github.context.issue.number
+		await this.#client.rest.issues.createComment({
+			owner: github.context.repo.owner,
+			repo: github.context.repo.repo,
+			issue_number: github.context.issue.number,
+			body: msg
 		});
-
-		let previousCommentId: number | null = null;
-
-		for (const comment of comments.data) {
-			if (
-				comment.user!.login === 'github-actions[bot]' &&
-				comment.body!.startsWith(`## ${title}:`)
-			) {
-				previousCommentId = comment.id;
-			}
-		}
-
-		if (previousCommentId) {
-			await this.#client.rest.issues.updateComment({
-				...github.context.repo,
-				comment_id: previousCommentId,
-				body: msg
-			});
-		} else {
-			await this.#client.rest.issues.createComment({
-				owner: github.context.repo.owner,
-				repo: github.context.repo.repo,
-				issue_number: github.context.issue.number,
-				body: msg
-			});
-		}
 	};
 }

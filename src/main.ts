@@ -32,7 +32,7 @@ const run = async (): Promise<void> => {
 		const emoji = 'rocket';
 		const gh = await github.getOctokit(core.getInput('github_token'));
 
-		await gh.rest.reactions.createForIssueComment({
+		gh.rest.reactions.createForIssueComment({
 			...github.context.repo,
 			comment_id: github.context.payload.comment!.id,
 			content: emoji

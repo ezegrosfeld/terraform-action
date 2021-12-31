@@ -62,7 +62,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         // react to comment event with rocket emoji
         const emoji = 'rocket';
         const gh = yield github.getOctokit(core.getInput('github_token'));
-        yield gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
+        gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
         const terra = new terraform_1.Terraform(gh, workspace);
         yield terra.executeTerraform(command, dir);
     }
@@ -215,25 +215,12 @@ class Terraform {
         });
         _Terraform_createComment.set(this, (title, comment) => __awaiter(this, void 0, void 0, function* () {
             const msg = `## ${title}: \n\n${comment}`;
-            const comments = yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.listComments(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number }));
-            let previousCommentId = null;
-            for (const comment of comments.data) {
-                if (comment.user.login === 'github-actions[bot]' &&
-                    comment.body.startsWith(`## ${title}:`)) {
-                    previousCommentId = comment.id;
-                }
-            }
-            if (previousCommentId) {
-                yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: previousCommentId, body: msg }));
-            }
-            else {
-                yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.createComment({
-                    owner: github.context.repo.owner,
-                    repo: github.context.repo.repo,
-                    issue_number: github.context.issue.number,
-                    body: msg
-                });
-            }
+            yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.createComment({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: github.context.issue.number,
+                body: msg
+            });
         }));
         __classPrivateFieldSet(this, _Terraform_client, client, "f");
         __classPrivateFieldSet(this, _Terraform_workspace, workspace, "f");
@@ -328,7 +315,7 @@ const formatOutput = (output) => {
     output = output.replace(/\  \+/g, '+');
     output = output.replace(/\  \~/g, '!');
     output = output.replace(/----/g, '====');
-    output = 'diff\n'.concat(output).concat('');
+    output = output.replace(/```/, '');
     output = output.replace(/,/g, '');
     output = output.replace(/>/g, '');
     output = output.replace(/Feature:/g, '\n\n> Feature:');
