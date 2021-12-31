@@ -3,6 +3,7 @@ import { Commands } from './utils/cmd';
 import { Octokit } from '@octokit/core';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { formatOutput } from './utils/ouput';
 
 declare const GitHub: typeof Octokit &
 	import('@octokit/core/dist-types/types').Constructor<
@@ -99,7 +100,7 @@ export class Terraform {
 
 			// add comment to issue with plan
 			const comment = `<details><summary>show output</summary>
-					\`\`\`\n${stdout}\`\`\`
+					\`\`\`\n${formatOutput(stdout)}\`\`\`
 			</details>`;
 
 			await this.#createComment('Terraform `plan`', comment);
