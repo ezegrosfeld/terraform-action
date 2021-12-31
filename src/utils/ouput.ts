@@ -34,10 +34,10 @@ export const formatOutput = (output: string): string => {
 	output = output.replace(/Feature:/g, '\n\n> Feature:');
 	output = output.replace(/Failure:/g, '- Failure:');
 	output = output.replace(/Scenario:/g, '> Scenario:');
-	output = output.replace(/\s\s+[+]/g, '\n+');
+	/* 	output = output.replace(/\s\s+[+]/g, '\n+');
 	output = output.replace(/\s\s+[!]/g, '\n!');
 	output = output.replace(/\s\s+[-]/g, '\n-');
-	output = output.replace(/\s\s+[>]/g, '\n>');
+	output = output.replace(/\s\s+[>]/g, '\n>'); */
 
 	return output;
 };

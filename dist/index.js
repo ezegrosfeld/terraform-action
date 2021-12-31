@@ -193,8 +193,13 @@ class Terraform {
                 }
                 console.log(stdout);
                 // add comment to issue with plan
-                const comment = `<details><summary>show output</summary>
-					\`\`\`\`\`\`\n${(0, ouput_1.formatOutput)(stdout)}\`\`\`
+                const comment = `
+			<details><summary>show output</summary>
+			
+			\`\`\`\n
+			${(0, ouput_1.formatOutput)(stdout)}
+			\`\`\`
+
 			</details>`;
                 yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
                 core.endGroup();
@@ -321,10 +326,10 @@ const formatOutput = (output) => {
     output = output.replace(/Feature:/g, '\n\n> Feature:');
     output = output.replace(/Failure:/g, '- Failure:');
     output = output.replace(/Scenario:/g, '> Scenario:');
-    output = output.replace(/\s\s+[+]/g, '\n+');
+    /* 	output = output.replace(/\s\s+[+]/g, '\n+');
     output = output.replace(/\s\s+[!]/g, '\n!');
     output = output.replace(/\s\s+[-]/g, '\n-');
-    output = output.replace(/\s\s+[>]/g, '\n>');
+    output = output.replace(/\s\s+[>]/g, '\n>'); */
     return output;
 };
 exports.formatOutput = formatOutput;
