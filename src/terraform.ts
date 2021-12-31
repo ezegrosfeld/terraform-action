@@ -46,7 +46,7 @@ export class Terraform {
 	};
 
 	#terraformInit = (fn: () => void) => {
-		exec('terraform init', (err, stdout, stderr) => {
+		exec('terraform init -input=false', (err, stdout, stderr) => {
 			core.startGroup('Terraform Init');
 			if (err) {
 				throw new Error(err.message);
@@ -99,7 +99,7 @@ export class Terraform {
 			console.log(stdout);
 
 			// add comment to issue with plan
-			const comment = `<details><summary>show output</summary>\n\n\`\`\`diff\n${formatOutput(
+			const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
 				stdout
 			)}\n\`\`\`\n\n</details>`;
 
@@ -110,20 +110,29 @@ export class Terraform {
 	};
 
 	#apply = () => {
-		exec('terraform apply', (err, stdout, stderr) => {
-			core.startGroup('Terraform Apply');
+		exec(
+			'terraform apply -no-color -auto-approve',
+			async (err, stdout, stderr) => {
+				core.startGroup('Terraform Apply');
 
-			if (err) {
-				throw new Error(err.message);
+				if (err) {
+					throw new Error(err.message);
+				}
+
+				if (stderr) {
+					throw new Error(stderr);
+				}
+
+				const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
+					stdout
+				)}\n\`\`\`\n\n</details>`;
+
+				await this.#createComment('Terraform `apply`', comment);
+
+				console.log(stdout);
+				core.endGroup();
 			}
-
-			if (stderr) {
-				throw new Error(stderr);
-			}
-
-			console.log(stdout);
-			core.endGroup();
-		});
+		);
 	};
 
 	#createComment = async (title: string, comment: string) => {

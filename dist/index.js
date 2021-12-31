@@ -155,7 +155,7 @@ class Terraform {
             }
         });
         _Terraform_terraformInit.set(this, (fn) => {
-            (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
+            (0, child_process_1.exec)('terraform init -input=false', (err, stdout, stderr) => {
                 core.startGroup('Terraform Init');
                 if (err) {
                     throw new Error(err.message);
@@ -193,13 +193,13 @@ class Terraform {
                 }
                 console.log(stdout);
                 // add comment to issue with plan
-                const comment = `<details><summary>show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
+                const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
                 yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
                 core.endGroup();
             }));
         });
         _Terraform_apply.set(this, () => {
-            (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
+            (0, child_process_1.exec)('terraform apply -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                 core.startGroup('Terraform Apply');
                 if (err) {
                     throw new Error(err.message);
@@ -207,9 +207,11 @@ class Terraform {
                 if (stderr) {
                     throw new Error(stderr);
                 }
+                const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
+                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
                 console.log(stdout);
                 core.endGroup();
-            });
+            }));
         });
         _Terraform_createComment.set(this, (title, comment) => __awaiter(this, void 0, void 0, function* () {
             const msg = `## ${title}: \n\n${comment}`;
