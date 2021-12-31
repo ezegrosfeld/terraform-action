@@ -75,8 +75,10 @@ const runFromPR = (gh, terra) => __awaiter(void 0, void 0, void 0, function* () 
         const dirs = files.data
             .map((file) => file.filename)
             .filter((file) => file.endsWith('.tf'));
+        core.info(`Modified terraform files: ${dirs}`);
         // Get only the directory path
         const dir = dirs.map((dir) => dir.split('/').slice(0, -1).join('/'));
+        core.info(`Modified terraform directories: ${dir}`);
         // for each directory run terraform plan
         for (const d of dir) {
             yield terra.executeTerraform(cmd_1.Commands.Plan, d);
