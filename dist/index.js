@@ -195,8 +195,8 @@ class Terraform {
                 // add comment to issue with plan
                 const comment = `
 			<details><summary>show output</summary>
-			
-			\`\`\`\n
+
+			\`\`\`
 			${(0, ouput_1.formatOutput)(stdout)}
 			\`\`\`
 
