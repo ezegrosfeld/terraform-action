@@ -32,12 +32,12 @@ export const formatOutput = (output: string): string => {
 	);
 	output = output.replace(/Refreshing state... /g, '');
 	output = output.replace(/Error:/g, '- Error:');
-	output = output.replace(/\  \-/g, '-\t');
-	output = output.replace(/\  \+/g, '+\t');
-	output = output.replace(/\  \~/g, '!\t');
-	output = output.replace(/\    \-/g, '-\t\t');
-	output = output.replace(/\    \+/g, '+\t\t');
-	output = output.replace(/\    \~/g, '!\t\t');
+	output = output.replace(/\  \-/g, '-');
+	output = output.replace(/\  \+/g, '+');
+	output = output.replace(/\  \~/g, '!');
+	output = output.replace(/\    \-/g, '-\t');
+	output = output.replace(/\    \+/g, '+\t');
+	output = output.replace(/\    \~/g, '!\t');
 	output = output.replace(/----/g, '====');
 	return output;
 };
