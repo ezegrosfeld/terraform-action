@@ -396,8 +396,9 @@ var Commands;
     Commands["ApplyDestroy"] = "apply-destroy";
 })(Commands = exports.Commands || (exports.Commands = {}));
 const getCommand = (c) => {
-    const command = c.match(/terraform\s(\w+)/);
-    const cmd = command ? command[1] : '';
+    const command = c.match(/terraform\s(\w+)+(-?)+(\w+)/);
+    console.log(command);
+    const cmd = command ? command[1] + command[2] + command[3] : '';
     switch (cmd) {
         case Commands.Plan:
             return Commands.Plan;

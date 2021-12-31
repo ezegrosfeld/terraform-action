@@ -7,8 +7,9 @@ export enum Commands {
 }
 
 export const getCommand = (c: string): Commands => {
-	const command = c.match(/terraform\s(\w+)/);
-	const cmd = command ? command[1] : '';
+	const command = c.match(/terraform\s(\w+)+(-?)+(\w+)/);
+	console.log(command);
+	const cmd = command ? command[1] + command[2] + command[3] : '';
 	switch (cmd) {
 		case Commands.Plan:
 			return Commands.Plan;
