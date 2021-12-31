@@ -23,11 +23,10 @@ export const formatOutput = (output: string): string => {
 	);
 	output = output.replace(/Refreshing state... /g, '');
 	output = output.replace(/Error:/g, '- Error:');
-	output = output.replace(/\  \-/g, '-');
+	/* 	output = output.replace(/\  \-/g, '-');
 	output = output.replace(/\  \+/g, '+');
-	output = output.replace(/\  \~/g, '!');
+	output = output.replace(/\  \~/g, '!'); */
 	output = output.replace(/----/g, '====');
-	output = output.replace(/```/g, '');
 	output = output.replace(/%0A/g, '\n\n');
 
 	output = output.replace(/,/g, '');
