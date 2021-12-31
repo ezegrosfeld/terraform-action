@@ -17,7 +17,7 @@ export const executeTerraform = async (
 
 		await terraformInit();
 
-		if (workspace !== '') {
+		/* if (workspace !== '') {
 			await setWorkspace(workspace);
 		}
 
@@ -30,7 +30,7 @@ export const executeTerraform = async (
 				break;
 			default:
 				break;
-		}
+		} */
 	} catch (e: any) {
 		throw new Error(e);
 	}
