@@ -194,7 +194,7 @@ class Terraform {
                 console.log(stdout);
                 // add comment to issue with plan
                 const comment = `<details><summary>show output</summary>
-					\n${(0, ouput_1.formatOutput)(stdout)}
+					\`\`\`\n${(0, ouput_1.formatOutput)(stdout)}\`\`\`
 			</details>`;
                 yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', comment);
                 core.endGroup();
@@ -315,7 +315,8 @@ const formatOutput = (output) => {
     output = output.replace(/\  \+/g, '+');
     output = output.replace(/\  \~/g, '!');
     output = output.replace(/----/g, '====');
-    output = output.replace(/```/, '');
+    output = output.replace(/```/g, '');
+    output = output.replace(/%0A/g, '\n\n');
     output = output.replace(/,/g, '');
     output = output.replace(/>/g, '');
     output = output.replace(/Feature:/g, '\n\n> Feature:');
@@ -325,7 +326,6 @@ const formatOutput = (output) => {
     output = output.replace(/\s\s+[!]/g, '\n!');
     output = output.replace(/\s\s+[-]/g, '\n-');
     output = output.replace(/\s\s+[>]/g, '\n>');
-    output = 'diff\n'.concat(output).concat('');
     return output;
 };
 exports.formatOutput = formatOutput;

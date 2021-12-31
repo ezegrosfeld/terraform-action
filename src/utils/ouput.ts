@@ -27,7 +27,8 @@ export const formatOutput = (output: string): string => {
 	output = output.replace(/\  \+/g, '+');
 	output = output.replace(/\  \~/g, '!');
 	output = output.replace(/----/g, '====');
-	output = output.replace(/```/, '');
+	output = output.replace(/```/g, '');
+	output = output.replace(/%0A/g, '\n\n');
 
 	output = output.replace(/,/g, '');
 	output = output.replace(/>/g, '');
@@ -38,7 +39,6 @@ export const formatOutput = (output: string): string => {
 	output = output.replace(/\s\s+[!]/g, '\n!');
 	output = output.replace(/\s\s+[-]/g, '\n-');
 	output = output.replace(/\s\s+[>]/g, '\n>');
-	output = 'diff\n'.concat(output).concat('');
 
 	return output;
 };
