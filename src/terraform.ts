@@ -12,16 +12,20 @@ declare const GitHub: typeof Octokit &
 		}
 	>;
 
-type Client = InstanceType<typeof GitHub>;
+export type Client = InstanceType<typeof GitHub>;
 
 export class Terraform {
 	#client: Client;
 	#workspace: string;
 
-	constructor(client: Client, workspace: string) {
+	constructor(client: Client) {
 		this.#client = client;
-		this.#workspace = workspace;
+		this.#workspace = 'dev';
 	}
+
+	workspace = (workspace: string) => {
+		this.#workspace = workspace;
+	};
 
 	executeTerraform = async (cmd: Commands, dir: string): Promise<void> => {
 		try {
@@ -36,6 +40,14 @@ export class Terraform {
 					break;
 				case Commands.Apply:
 					this.#terraformInit(() => this.#plan(false, this.#apply));
+					break;
+				case Commands.PlanDestroy:
+					this.#terraformInit(this.#planDestroy);
+					break;
+				case Commands.ApplyDestroy:
+					this.#terraformInit(() =>
+						this.#planDestroy(false, this.#applyDestroy)
+					);
 					break;
 				default:
 					break;
@@ -56,13 +68,9 @@ export class Terraform {
 				throw new Error(stderr);
 			}
 
-			console.log(stdout);
+			core.info(stdout);
 			core.endGroup();
-			try {
-				this.#setWorkspace(fn);
-			} catch (e: any) {
-				throw new Error(e);
-			}
+			this.#setWorkspace(fn);
 		});
 	};
 
@@ -81,13 +89,9 @@ export class Terraform {
 					throw new Error(stderr);
 				}
 
-				console.log(stdout);
+				core.info(stdout);
 				core.endGroup();
-				try {
-					fn();
-				} catch (e: any) {
-					throw new Error(e);
-				}
+				fn();
 			}
 		);
 	};
@@ -97,29 +101,26 @@ export class Terraform {
 			core.startGroup('Terraform Plan');
 
 			if (err) {
+				const comment = this.#buildOutputDetails(err.message);
+				await this.#createComment('Terraform `plan` failed', comment);
 				throw new Error(err.message);
 			}
 
 			if (stderr) {
+				const comment = this.#buildOutputDetails(stderr);
+				await this.#createComment('Terraform `plan` failed', comment);
 				throw new Error(stderr);
 			}
 
-			console.log(stdout);
+			core.info(stdout);
 
 			// add comment to issue with plan
 			if (comment) {
-				const msg = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
-					stdout
-				)}\n\`\`\`\n\n</details>`;
-
+				const msg = this.#buildOutputDetails(stdout);
 				await this.#createComment('Terraform `plan`', msg);
 			}
 
-			try {
-				typeof fn !== 'undefined' && fn();
-			} catch (e: any) {
-				throw new Error(e);
-			}
+			typeof fn !== 'undefined' && fn();
 
 			core.endGroup();
 		});
@@ -132,30 +133,84 @@ export class Terraform {
 				core.startGroup('Terraform Apply');
 
 				if (err) {
-					const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
-						err.message
-					)}\n\`\`\`\n\n</details>`;
-
+					const comment = this.#buildOutputDetails(err.message);
 					await this.#createComment('Terraform `apply` failed', comment);
 					throw new Error(err.message);
 				}
 
 				if (stderr) {
-					const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
-						stderr
-					)}\n\`\`\`\n\n</details>`;
-
+					const comment = this.#buildOutputDetails(stderr);
 					await this.#createComment('Terraform `apply` failed', comment);
 					throw new Error(stderr);
 				}
 
-				const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
-					stdout
-				)}\n\`\`\`\n\n</details>`;
-
+				const comment = this.#buildOutputDetails(stdout);
 				await this.#createComment('Terraform `apply`', comment);
 
-				console.log(stdout);
+				core.info(stdout);
+				core.endGroup();
+			}
+		);
+	};
+
+	#planDestroy = (comment: boolean = true, fn?: () => void) => {
+		exec('terraform plan -destroy -no-color', async (err, stdout, stderr) => {
+			core.startGroup('Terraform Plan Destroy');
+
+			if (err) {
+				const comment = this.#buildOutputDetails(err.message);
+				await this.#createComment('Terraform `plan-destroy` failed', comment);
+				throw new Error(err.message);
+			}
+
+			if (stderr) {
+				const comment = this.#buildOutputDetails(stderr);
+				await this.#createComment('Terraform `plan-destroy` failed', comment);
+				throw new Error(stderr);
+			}
+
+			core.info(stdout);
+
+			// add comment to issue with plan
+			if (comment) {
+				const msg = this.#buildOutputDetails(stdout);
+				await this.#createComment('Terraform `plan-destroy`', msg);
+			}
+
+			typeof fn !== 'undefined' && fn();
+
+			core.endGroup();
+		});
+	};
+
+	#applyDestroy = () => {
+		exec(
+			'terraform apply -destroy -no-color -auto-approve',
+			async (err, stdout, stderr) => {
+				core.startGroup('Terraform Apply Destroy');
+
+				if (err) {
+					const comment = this.#buildOutputDetails(err.message);
+					await this.#createComment(
+						'Terraform `apply-destroy` failed',
+						comment
+					);
+					throw new Error(err.message);
+				}
+
+				if (stderr) {
+					const comment = this.#buildOutputDetails(stderr);
+					await this.#createComment(
+						'Terraform `apply-destroy` failed',
+						comment
+					);
+					throw new Error(stderr);
+				}
+
+				const comment = this.#buildOutputDetails(stdout);
+				await this.#createComment('Terraform `apply-destroy`', comment);
+
+				core.info(stdout);
 				core.endGroup();
 			}
 		);
@@ -170,5 +225,11 @@ export class Terraform {
 			issue_number: github.context.issue.number,
 			body: msg
 		});
+	};
+
+	#buildOutputDetails = (details: string): string => {
+		return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
+			details
+		)}\n\`\`\`\n\n</details>`;
 	};
 }
