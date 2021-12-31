@@ -222,8 +222,10 @@ const executeTerraform = (cmd, dir, workspace) => __awaiter(void 0, void 0, void
         switch (cmd) {
             case cmd_1.Commands.Plan:
                 terraformInit(ws, plan_1.plan);
+                break;
             case cmd_1.Commands.Apply:
                 terraformInit(ws, apply_1.apply);
+                break;
             default:
                 break;
         }

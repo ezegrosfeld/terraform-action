@@ -24,8 +24,10 @@ export const executeTerraform = async (
 		switch (cmd) {
 			case Commands.Plan:
 				terraformInit(ws, plan);
+				break;
 			case Commands.Apply:
 				terraformInit(ws, apply);
+				break;
 			default:
 				break;
 		}
