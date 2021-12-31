@@ -2,11 +2,8 @@ export const formatOutput = (output: string): string => {
 	// remove all commands that have :: in them
 	const outputLines = output.split('\n').filter((line) => !line.includes('::'));
 
-	// remove empty lines
-	const filteredLines = outputLines.filter((line) => line.length > 0);
-
 	// remove the first line
-	const formattedLines = filteredLines.slice(1);
+	const formattedLines = outputLines.slice(1);
 
 	// join the remaining lines
 	output = formattedLines.join('\n');
@@ -35,9 +32,12 @@ export const formatOutput = (output: string): string => {
 	);
 	output = output.replace(/Refreshing state... /g, '');
 	output = output.replace(/Error:/g, '- Error:');
-	output = output.replace(/\  \-/g, '-');
-	output = output.replace(/\  \+/g, '+');
-	output = output.replace(/\  \~/g, '!');
+	output = output.replace(/\  \-/g, '-\t');
+	output = output.replace(/\  \+/g, '+\t');
+	output = output.replace(/\  \~/g, '!\t');
+	output = output.replace(/\    \-/g, '-\t\t');
+	output = output.replace(/\    \+/g, '+\t\t');
+	output = output.replace(/\    \~/g, '!\t\t');
 	output = output.replace(/----/g, '====');
 	return output;
 };
