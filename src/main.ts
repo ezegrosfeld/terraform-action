@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { executeTerraform } from './terraform';
+import { Terraform } from './terraform';
 import { Commands, getCommand, isCommand } from './utils/cmd';
 import { getDir, getWorkspace } from './utils/flags';
 
@@ -38,7 +38,8 @@ const run = async (): Promise<void> => {
 			content: emoji
 		});
 
-		await executeTerraform(command, dir, workspace);
+		const terra = new Terraform(gh, workspace);
+		await terra.executeTerraform(command, dir);
 	} catch (err) {
 		console.log(err);
 		if (err instanceof Error) core.setFailed(err.message);

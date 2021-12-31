@@ -1,52 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 7431:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.apply = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const core = __importStar(__nccwpck_require__(2186));
-const apply = () => {
-    (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
-        core.startGroup('Terraform Apply');
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
-        core.endGroup();
-    });
-};
-exports.apply = apply;
-
-
-/***/ }),
-
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -109,7 +63,8 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const emoji = 'rocket';
         const gh = yield github.getOctokit(core.getInput('github_token'));
         yield gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
-        yield (0, terraform_1.executeTerraform)(command, dir, workspace);
+        const terra = new terraform_1.Terraform(gh, workspace);
+        yield terra.executeTerraform(command, dir);
     }
     catch (err) {
         console.log(err);
@@ -118,52 +73,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 run();
-
-
-/***/ }),
-
-/***/ 5692:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.plan = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const core = __importStar(__nccwpck_require__(2186));
-const plan = () => {
-    (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
-        core.startGroup('Terraform Plan');
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
-        core.endGroup();
-    });
-};
-exports.plan = plan;
 
 
 /***/ }),
@@ -201,54 +110,122 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.executeTerraform = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const apply_1 = __nccwpck_require__(7431);
-const plan_1 = __nccwpck_require__(5692);
-const cmd_1 = __nccwpck_require__(9548);
-const workspace_1 = __nccwpck_require__(1316);
-const core = __importStar(__nccwpck_require__(2186));
-const executeTerraform = (cmd, dir, workspace) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        if (dir !== '') {
-            core.info(`Changing directory to ${dir}`);
-            process.chdir(dir);
-        }
-        let ws = 'dev';
-        if (workspace !== '') {
-            ws = workspace;
-        }
-        switch (cmd) {
-            case cmd_1.Commands.Plan:
-                terraformInit(ws, plan_1.plan);
-                break;
-            case cmd_1.Commands.Apply:
-                terraformInit(ws, apply_1.apply);
-                break;
-            default:
-                break;
-        }
-    }
-    catch (e) {
-        throw new Error(e);
-    }
-});
-exports.executeTerraform = executeTerraform;
-const terraformInit = (ws, fn) => {
-    (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
-        core.startGroup('Terraform Init');
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
-        core.endGroup();
-        (0, workspace_1.setWorkspace)(ws, fn);
-    });
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _Terraform_client, _Terraform_workspace, _Terraform_terraformInit, _Terraform_setWorkspace, _Terraform_plan, _Terraform_apply;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Terraform = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const cmd_1 = __nccwpck_require__(9548);
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+class Terraform {
+    constructor(client, workspace) {
+        _Terraform_client.set(this, void 0);
+        _Terraform_workspace.set(this, void 0);
+        this.executeTerraform = (cmd, dir) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (dir !== '') {
+                    core.info(`Changing directory to ${dir}`);
+                    process.chdir(dir);
+                }
+                switch (cmd) {
+                    case cmd_1.Commands.Plan:
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
+                        break;
+                    case cmd_1.Commands.Apply:
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (e) {
+                throw new Error(e);
+            }
+        });
+        _Terraform_terraformInit.set(this, (fn) => {
+            (0, child_process_1.exec)('terraform init', (err, stdout, stderr) => {
+                core.startGroup('Terraform Init');
+                if (err) {
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    throw new Error(stderr);
+                }
+                console.log(stdout);
+                core.endGroup();
+                __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
+            });
+        });
+        _Terraform_setWorkspace.set(this, (fn) => {
+            (0, child_process_1.exec)(`terraform workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
+                core.startGroup('Terraform Workspace');
+                if (err) {
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    throw new Error(stderr);
+                }
+                console.log(stdout);
+                core.endGroup();
+                fn();
+            });
+        });
+        _Terraform_plan.set(this, () => {
+            (0, child_process_1.exec)('terraform plan', (err, stdout, stderr) => {
+                core.startGroup('Terraform Plan');
+                if (err) {
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    throw new Error(stderr);
+                }
+                console.log(stdout);
+                // add comment to issue with plan
+                const comment = `
+				<details>
+					<summary>Terraform Plan</summary>
+					<pre>\`\`\`${stdout}\`\`\`</pre>
+				</details>
+			`;
+                __classPrivateFieldGet(this, _Terraform_client, "f").rest.issues.createComment({
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    issue_number: github.context.issue.number,
+                    body: comment
+                });
+                core.endGroup();
+            });
+        });
+        _Terraform_apply.set(this, () => {
+            (0, child_process_1.exec)('terraform apply', (err, stdout, stderr) => {
+                core.startGroup('Terraform Apply');
+                if (err) {
+                    throw new Error(err.message);
+                }
+                if (stderr) {
+                    throw new Error(stderr);
+                }
+                console.log(stdout);
+                core.endGroup();
+            });
+        });
+        __classPrivateFieldSet(this, _Terraform_client, client, "f");
+        __classPrivateFieldSet(this, _Terraform_workspace, workspace, "f");
+    }
+}
+exports.Terraform = Terraform;
+_Terraform_client = new WeakMap(), _Terraform_workspace = new WeakMap(), _Terraform_terraformInit = new WeakMap(), _Terraform_setWorkspace = new WeakMap(), _Terraform_plan = new WeakMap(), _Terraform_apply = new WeakMap();
 
 
 /***/ }),
@@ -311,53 +288,6 @@ const getWorkspace = (c) => {
     return workspace ? workspace[1] : '';
 };
 exports.getWorkspace = getWorkspace;
-
-
-/***/ }),
-
-/***/ 1316:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setWorkspace = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const core = __importStar(__nccwpck_require__(2186));
-const setWorkspace = (ws, fn) => {
-    (0, child_process_1.exec)(`terraform workspace select ${ws} || terraform workspace new ${ws}`, (err, stdout, stderr) => {
-        core.startGroup('Terraform Workspace');
-        if (err) {
-            throw new Error(err.message);
-        }
-        if (stderr) {
-            throw new Error(stderr);
-        }
-        console.log(stdout);
-        core.endGroup();
-        fn();
-    });
-};
-exports.setWorkspace = setWorkspace;
 
 
 /***/ }),
