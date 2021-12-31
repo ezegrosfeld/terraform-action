@@ -116,10 +116,20 @@ export class Terraform {
 				core.startGroup('Terraform Apply');
 
 				if (err) {
+					const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
+						err.message
+					)}\n\`\`\`\n\n</details>`;
+
+					await this.#createComment('Terraform `apply` failed', comment);
 					throw new Error(err.message);
 				}
 
 				if (stderr) {
+					const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
+						stderr
+					)}\n\`\`\`\n\n</details>`;
+
+					await this.#createComment('Terraform `apply` failed', comment);
 					throw new Error(stderr);
 				}
 

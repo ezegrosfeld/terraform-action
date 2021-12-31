@@ -202,9 +202,13 @@ class Terraform {
             (0, child_process_1.exec)('terraform apply -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                 core.startGroup('Terraform Apply');
                 if (err) {
+                    const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(err.message)}\n\`\`\`\n\n</details>`;
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                     throw new Error(err.message);
                 }
                 if (stderr) {
+                    const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stderr)}\n\`\`\`\n\n</details>`;
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                     throw new Error(stderr);
                 }
                 const comment = `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(stdout)}\n\`\`\`\n\n</details>`;
