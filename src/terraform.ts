@@ -100,7 +100,7 @@ export class Terraform {
 
 			// add comment to issue with plan
 			const comment = `<details><summary>show output</summary>
-					\`\`\`\n${formatOutput(stdout)}\`\`\`
+					\`\`\`\`\`\`\n${formatOutput(stdout)}\`\`\`
 			</details>`;
 
 			await this.#createComment('Terraform `plan`', comment);
