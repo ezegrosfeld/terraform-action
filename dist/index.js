@@ -247,32 +247,52 @@ class Terraform {
             }
         });
         _Terraform_terraformInit.set(this, (fn) => {
-            (0, child_process_1.exec)('terraform init -input=false', (err, stdout, stderr) => {
-                core.startGroup('Terraform Init');
-                if (err) {
-                    throw new Error(err.message);
-                }
-                if (stderr) {
-                    throw new Error(stderr);
-                }
-                core.info(stdout);
-                core.endGroup();
-                __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
-            });
+            try {
+                (0, child_process_1.exec)('terraform init -input=false', (err, stdout, stderr) => {
+                    core.startGroup('Terraform Init');
+                    core.info(stdout);
+                    if (err) {
+                        throw new Error(err.message);
+                    }
+                    if (stderr) {
+                        throw new Error(stderr);
+                    }
+                    core.endGroup();
+                    try {
+                        __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
+                    }
+                    catch (e) {
+                        throw new Error(e);
+                    }
+                });
+            }
+            catch (e) {
+                throw new Error(e);
+            }
         });
         _Terraform_setWorkspace.set(this, (fn) => {
-            (0, child_process_1.exec)(`terraform workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
-                core.startGroup('Terraform Workspace');
-                if (err) {
-                    throw new Error(err.message);
-                }
-                if (stderr) {
-                    throw new Error(stderr);
-                }
-                core.info(stdout);
-                core.endGroup();
-                fn();
-            });
+            try {
+                (0, child_process_1.exec)(`terraform workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
+                    core.startGroup('Terraform Workspace');
+                    core.info(stdout);
+                    if (err) {
+                        throw new Error(err.message);
+                    }
+                    if (stderr) {
+                        throw new Error(stderr);
+                    }
+                    core.endGroup();
+                    try {
+                        fn();
+                    }
+                    catch (e) {
+                        throw new Error(e);
+                    }
+                });
+            }
+            catch (e) {
+                throw new Error(e);
+            }
         });
         _Terraform_plan.set(this, (comment = true, fn) => {
             try {
@@ -280,12 +300,12 @@ class Terraform {
                     core.startGroup('Terraform Plan');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
                         throw new Error(stderr);
                     }
@@ -308,12 +328,12 @@ class Terraform {
                     core.startGroup('Terraform Apply');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                         throw new Error(stderr);
                     }
@@ -332,12 +352,12 @@ class Terraform {
                     core.startGroup('Terraform Plan Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
                         throw new Error(stderr);
                     }
@@ -360,12 +380,12 @@ class Terraform {
                     core.startGroup('Terraform Apply Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                         throw new Error(stderr);
                     }

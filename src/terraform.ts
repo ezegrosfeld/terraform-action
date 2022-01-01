@@ -56,29 +56,10 @@ export class Terraform {
 	};
 
 	#terraformInit = (fn: () => void) => {
-		exec('terraform init -input=false', (err, stdout, stderr) => {
-			core.startGroup('Terraform Init');
-			if (err) {
-				throw new Error(err.message);
-			}
-
-			if (stderr) {
-				throw new Error(stderr);
-			}
-
-			core.info(stdout);
-			core.endGroup();
-			this.#setWorkspace(fn);
-		});
-	};
-
-	#setWorkspace = (fn: () => void) => {
-		exec(
-			`terraform workspace select ${
-				this.#workspace
-			} || terraform workspace new ${this.#workspace}`,
-			(err, stdout, stderr) => {
-				core.startGroup('Terraform Workspace');
+		try {
+			exec('terraform init -input=false', (err, stdout, stderr) => {
+				core.startGroup('Terraform Init');
+				core.info(stdout);
 				if (err) {
 					throw new Error(err.message);
 				}
@@ -86,12 +67,48 @@ export class Terraform {
 				if (stderr) {
 					throw new Error(stderr);
 				}
-
-				core.info(stdout);
 				core.endGroup();
-				fn();
-			}
-		);
+				try {
+					this.#setWorkspace(fn);
+				} catch (e: any) {
+					throw new Error(e);
+				}
+			});
+		} catch (e: any) {
+			throw new Error(e);
+		}
+	};
+
+	#setWorkspace = (fn: () => void) => {
+		try {
+			exec(
+				`terraform workspace select ${
+					this.#workspace
+				} || terraform workspace new ${this.#workspace}`,
+				(err, stdout, stderr) => {
+					core.startGroup('Terraform Workspace');
+					core.info(stdout);
+
+					if (err) {
+						throw new Error(err.message);
+					}
+
+					if (stderr) {
+						throw new Error(stderr);
+					}
+
+					core.endGroup();
+
+					try {
+						fn();
+					} catch (e: any) {
+						throw new Error(e);
+					}
+				}
+			);
+		} catch (e: any) {
+			throw new Error(e);
+		}
 	};
 
 	#plan = (comment: boolean = true, fn?: () => void) => {
@@ -100,13 +117,13 @@ export class Terraform {
 				core.startGroup('Terraform Plan');
 				core.info(stdout);
 				if (err) {
-					const comment = this.#buildOutputDetails(err.message);
+					const comment = this.#buildOutputDetails(stdout);
 					await this.#createComment('Terraform `plan` failed', comment);
 					throw new Error(err.message);
 				}
 
 				if (stderr) {
-					const comment = this.#buildOutputDetails(stderr);
+					const comment = this.#buildOutputDetails(stdout);
 					await this.#createComment('Terraform `plan` failed', comment);
 					throw new Error(stderr);
 				}
@@ -135,13 +152,13 @@ export class Terraform {
 					core.info(stdout);
 
 					if (err) {
-						const comment = this.#buildOutputDetails(err.message);
+						const comment = this.#buildOutputDetails(stdout);
 						await this.#createComment('Terraform `apply` failed', comment);
 						throw new Error(err.message);
 					}
 
 					if (stderr) {
-						const comment = this.#buildOutputDetails(stderr);
+						const comment = this.#buildOutputDetails(stdout);
 						await this.#createComment('Terraform `apply` failed', comment);
 						throw new Error(stderr);
 					}
@@ -164,13 +181,13 @@ export class Terraform {
 				core.info(stdout);
 
 				if (err) {
-					const comment = this.#buildOutputDetails(err.message);
+					const comment = this.#buildOutputDetails(stdout);
 					await this.#createComment('Terraform `plan-destroy` failed', comment);
 					throw new Error(err.message);
 				}
 
 				if (stderr) {
-					const comment = this.#buildOutputDetails(stderr);
+					const comment = this.#buildOutputDetails(stdout);
 					await this.#createComment('Terraform `plan-destroy` failed', comment);
 					throw new Error(stderr);
 				}
@@ -199,7 +216,7 @@ export class Terraform {
 					core.info(stdout);
 
 					if (err) {
-						const comment = this.#buildOutputDetails(err.message);
+						const comment = this.#buildOutputDetails(stdout);
 						await this.#createComment(
 							'Terraform `apply-destroy` failed',
 							comment
@@ -208,7 +225,7 @@ export class Terraform {
 					}
 
 					if (stderr) {
-						const comment = this.#buildOutputDetails(stderr);
+						const comment = this.#buildOutputDetails(stdout);
 						await this.#createComment(
 							'Terraform `apply-destroy` failed',
 							comment
