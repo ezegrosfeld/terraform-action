@@ -95,123 +95,136 @@ export class Terraform {
 	};
 
 	#plan = (comment: boolean = true, fn?: () => void) => {
-		exec('terraform plan -no-color', async (err, stdout, stderr) => {
-			core.startGroup('Terraform Plan');
+		try {
+			exec('terraform plan -no-color', async (err, stdout, stderr) => {
+				core.startGroup('Terraform Plan');
+				core.info(stdout);
+				if (err) {
+					const comment = this.#buildOutputDetails(err.message);
+					await this.#createComment('Terraform `plan` failed', comment);
+					throw new Error(err.message);
+				}
 
-			if (err) {
-				const comment = this.#buildOutputDetails(err.message);
-				await this.#createComment('Terraform `plan` failed', comment);
-				throw new Error(err.message);
-			}
+				if (stderr) {
+					const comment = this.#buildOutputDetails(stderr);
+					await this.#createComment('Terraform `plan` failed', comment);
+					throw new Error(stderr);
+				}
 
-			if (stderr) {
-				const comment = this.#buildOutputDetails(stderr);
-				await this.#createComment('Terraform `plan` failed', comment);
-				throw new Error(stderr);
-			}
+				// add comment to issue with plan
+				if (comment) {
+					const msg = this.#buildOutputDetails(stdout);
+					await this.#createComment('Terraform `plan`', msg);
+				}
 
-			core.info(stdout);
+				typeof fn !== 'undefined' && fn();
 
-			// add comment to issue with plan
-			if (comment) {
-				const msg = this.#buildOutputDetails(stdout);
-				await this.#createComment('Terraform `plan`', msg);
-			}
-
-			typeof fn !== 'undefined' && fn();
-
-			core.endGroup();
-		});
+				core.endGroup();
+			});
+		} catch (e: any) {
+			throw new Error(e);
+		}
 	};
 
 	#apply = () => {
-		exec(
-			'terraform apply -no-color -auto-approve',
-			async (err, stdout, stderr) => {
-				core.startGroup('Terraform Apply');
+		try {
+			exec(
+				'terraform apply -no-color -auto-approve',
+				async (err, stdout, stderr) => {
+					core.startGroup('Terraform Apply');
+					core.info(stdout);
 
-				if (err) {
-					const comment = this.#buildOutputDetails(err.message);
-					await this.#createComment('Terraform `apply` failed', comment);
-					throw new Error(err.message);
+					if (err) {
+						const comment = this.#buildOutputDetails(err.message);
+						await this.#createComment('Terraform `apply` failed', comment);
+						throw new Error(err.message);
+					}
+
+					if (stderr) {
+						const comment = this.#buildOutputDetails(stderr);
+						await this.#createComment('Terraform `apply` failed', comment);
+						throw new Error(stderr);
+					}
+
+					const comment = this.#buildOutputDetails(stdout);
+					await this.#createComment('Terraform `apply`', comment);
+
+					core.endGroup();
 				}
-
-				if (stderr) {
-					const comment = this.#buildOutputDetails(stderr);
-					await this.#createComment('Terraform `apply` failed', comment);
-					throw new Error(stderr);
-				}
-
-				const comment = this.#buildOutputDetails(stdout);
-				await this.#createComment('Terraform `apply`', comment);
-
-				core.info(stdout);
-				core.endGroup();
-			}
-		);
+			);
+		} catch (e: any) {
+			throw new Error(e);
+		}
 	};
 
 	#planDestroy = (comment: boolean = true, fn?: () => void) => {
-		exec('terraform plan -destroy -no-color', async (err, stdout, stderr) => {
-			core.startGroup('Terraform Plan Destroy');
-
-			if (err) {
-				const comment = this.#buildOutputDetails(err.message);
-				await this.#createComment('Terraform `plan-destroy` failed', comment);
-				throw new Error(err.message);
-			}
-
-			if (stderr) {
-				const comment = this.#buildOutputDetails(stderr);
-				await this.#createComment('Terraform `plan-destroy` failed', comment);
-				throw new Error(stderr);
-			}
-
-			core.info(stdout);
-
-			// add comment to issue with plan
-			if (comment) {
-				const msg = this.#buildOutputDetails(stdout);
-				await this.#createComment('Terraform `plan-destroy`', msg);
-			}
-
-			typeof fn !== 'undefined' && fn();
-
-			core.endGroup();
-		});
-	};
-
-	#applyDestroy = () => {
-		exec(
-			'terraform apply -destroy -no-color -auto-approve',
-			async (err, stdout, stderr) => {
-				core.startGroup('Terraform Apply Destroy');
+		try {
+			exec('terraform plan -destroy -no-color', async (err, stdout, stderr) => {
+				core.startGroup('Terraform Plan Destroy');
+				core.info(stdout);
 
 				if (err) {
 					const comment = this.#buildOutputDetails(err.message);
-					await this.#createComment(
-						'Terraform `apply-destroy` failed',
-						comment
-					);
+					await this.#createComment('Terraform `plan-destroy` failed', comment);
 					throw new Error(err.message);
 				}
 
 				if (stderr) {
 					const comment = this.#buildOutputDetails(stderr);
-					await this.#createComment(
-						'Terraform `apply-destroy` failed',
-						comment
-					);
+					await this.#createComment('Terraform `plan-destroy` failed', comment);
 					throw new Error(stderr);
 				}
 
-				const comment = this.#buildOutputDetails(stdout);
-				await this.#createComment('Terraform `apply-destroy`', comment);
+				// add comment to issue with plan
+				if (comment) {
+					const msg = this.#buildOutputDetails(stdout);
+					await this.#createComment('Terraform `plan-destroy`', msg);
+				}
 
-				core.info(stdout);
+				typeof fn !== 'undefined' && fn();
+
 				core.endGroup();
-			}
-		);
+			});
+		} catch (e: any) {
+			throw new Error(e);
+		}
+	};
+
+	#applyDestroy = () => {
+		try {
+			exec(
+				'terraform apply -destroy -no-color -auto-approve',
+				async (err, stdout, stderr) => {
+					core.startGroup('Terraform Apply Destroy');
+					core.info(stdout);
+
+					if (err) {
+						const comment = this.#buildOutputDetails(err.message);
+						await this.#createComment(
+							'Terraform `apply-destroy` failed',
+							comment
+						);
+						throw new Error(err.message);
+					}
+
+					if (stderr) {
+						const comment = this.#buildOutputDetails(stderr);
+						await this.#createComment(
+							'Terraform `apply-destroy` failed',
+							comment
+						);
+						throw new Error(stderr);
+					}
+
+					const comment = this.#buildOutputDetails(stdout);
+					await this.#createComment('Terraform `apply-destroy`', comment);
+
+					core.endGroup();
+				}
+			);
+		} catch (e: any) {
+			throw new Error(e);
+		}
 	};
 
 	#createComment = async (title: string, comment: string) => {

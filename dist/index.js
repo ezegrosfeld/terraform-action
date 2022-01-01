@@ -275,88 +275,108 @@ class Terraform {
             });
         });
         _Terraform_plan.set(this, (comment = true, fn) => {
-            (0, child_process_1.exec)('terraform plan -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
-                core.startGroup('Terraform Plan');
-                if (err) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
-                    throw new Error(err.message);
-                }
-                if (stderr) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
-                    throw new Error(stderr);
-                }
-                core.info(stdout);
-                // add comment to issue with plan
-                if (comment) {
-                    const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', msg);
-                }
-                typeof fn !== 'undefined' && fn();
-                core.endGroup();
-            }));
+            try {
+                (0, child_process_1.exec)('terraform plan -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                    core.startGroup('Terraform Plan');
+                    core.info(stdout);
+                    if (err) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
+                        throw new Error(err.message);
+                    }
+                    if (stderr) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
+                        throw new Error(stderr);
+                    }
+                    // add comment to issue with plan
+                    if (comment) {
+                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', msg);
+                    }
+                    typeof fn !== 'undefined' && fn();
+                    core.endGroup();
+                }));
+            }
+            catch (e) {
+                throw new Error(e);
+            }
         });
         _Terraform_apply.set(this, () => {
-            (0, child_process_1.exec)('terraform apply -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
-                core.startGroup('Terraform Apply');
-                if (err) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
-                    throw new Error(err.message);
-                }
-                if (stderr) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
-                    throw new Error(stderr);
-                }
-                const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
-                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
-                core.info(stdout);
-                core.endGroup();
-            }));
+            try {
+                (0, child_process_1.exec)('terraform apply -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                    core.startGroup('Terraform Apply');
+                    core.info(stdout);
+                    if (err) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
+                        throw new Error(err.message);
+                    }
+                    if (stderr) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
+                        throw new Error(stderr);
+                    }
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
+                    core.endGroup();
+                }));
+            }
+            catch (e) {
+                throw new Error(e);
+            }
         });
         _Terraform_planDestroy.set(this, (comment = true, fn) => {
-            (0, child_process_1.exec)('terraform plan -destroy -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
-                core.startGroup('Terraform Plan Destroy');
-                if (err) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
-                    throw new Error(err.message);
-                }
-                if (stderr) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
-                    throw new Error(stderr);
-                }
-                core.info(stdout);
-                // add comment to issue with plan
-                if (comment) {
-                    const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy`', msg);
-                }
-                typeof fn !== 'undefined' && fn();
-                core.endGroup();
-            }));
+            try {
+                (0, child_process_1.exec)('terraform plan -destroy -no-color', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                    core.startGroup('Terraform Plan Destroy');
+                    core.info(stdout);
+                    if (err) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
+                        throw new Error(err.message);
+                    }
+                    if (stderr) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
+                        throw new Error(stderr);
+                    }
+                    // add comment to issue with plan
+                    if (comment) {
+                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy`', msg);
+                    }
+                    typeof fn !== 'undefined' && fn();
+                    core.endGroup();
+                }));
+            }
+            catch (e) {
+                throw new Error(e);
+            }
         });
         _Terraform_applyDestroy.set(this, () => {
-            (0, child_process_1.exec)('terraform apply -destroy -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
-                core.startGroup('Terraform Apply Destroy');
-                if (err) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
-                    throw new Error(err.message);
-                }
-                if (stderr) {
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
-                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
-                    throw new Error(stderr);
-                }
-                const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
-                yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy`', comment);
-                core.info(stdout);
-                core.endGroup();
-            }));
+            try {
+                (0, child_process_1.exec)('terraform apply -destroy -no-color -auto-approve', (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                    core.startGroup('Terraform Apply Destroy');
+                    core.info(stdout);
+                    if (err) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, err.message);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
+                        throw new Error(err.message);
+                    }
+                    if (stderr) {
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stderr);
+                        yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
+                        throw new Error(stderr);
+                    }
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                    yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy`', comment);
+                    core.endGroup();
+                }));
+            }
+            catch (e) {
+                throw new Error(e);
+            }
         });
         _Terraform_createComment.set(this, (title, comment) => __awaiter(this, void 0, void 0, function* () {
             const msg = `## ${title}: \n\n${comment}`;
