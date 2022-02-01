@@ -34,6 +34,13 @@ export class Terraform {
 				process.chdir(dir);
 			}
 
+			const def_dir = core.getInput('default_dir');
+
+			if (def_dir !== '') {
+				core.info(`Changing directory to ${def_dir}`);
+				process.chdir(def_dir);
+			}
+
 			switch (cmd) {
 				case Commands.Plan:
 					this.#terraformInit(this.#plan);

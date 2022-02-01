@@ -6,7 +6,7 @@ import { getWorkspace } from './utils/flags';
 
 const run = async (): Promise<void> => {
 	try {
-		const gh = await github.getOctokit(core.getInput('github_token'));
+		const gh = github.getOctokit(core.getInput('github_token'));
 		const terra = new Terraform(gh);
 
 		const comment = github.context.payload.comment;
