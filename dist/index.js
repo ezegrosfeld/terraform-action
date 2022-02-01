@@ -136,7 +136,7 @@ const terraform_1 = __nccwpck_require__(3620);
 const flags_1 = __nccwpck_require__(4912);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const gh = yield github.getOctokit(core.getInput('github_token'));
+        const gh = github.getOctokit(core.getInput('github_token'));
         const terra = new terraform_1.Terraform(gh);
         const comment = github.context.payload.comment;
         if (typeof comment === 'undefined' || !comment) {
@@ -224,6 +224,11 @@ class Terraform {
                 if (dir !== '') {
                     core.info(`Changing directory to ${dir}`);
                     process.chdir(dir);
+                }
+                const def_dir = core.getInput('default_dir');
+                if (def_dir !== '') {
+                    core.info(`Changing directory to ${def_dir}`);
+                    process.chdir(def_dir);
                 }
                 switch (cmd) {
                     case cmd_1.Commands.Plan:
