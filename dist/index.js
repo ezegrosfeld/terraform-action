@@ -303,7 +303,7 @@ class Terraform {
                 if (def_dir !== '') {
                     __classPrivateFieldSet(this, _Terraform_chdir, def_dir, "f");
                 }
-                yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.checks.create({
+                const res = yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.checks.create({
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     name: `terraform-pr-${cmd}`,
@@ -315,6 +315,9 @@ class Terraform {
                         text: `Running Terraform ${cmd}`,
                     },
                 });
+                if (res.status !== 201) {
+                    throw new Error(`Failed to create check, status: ${res.status}`);
+                }
                 switch (cmd) {
                     case cmd_1.Commands.Plan:
                         __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));

@@ -43,7 +43,7 @@ export class Terraform {
                 this.#chdir = def_dir;
             }
 
-            await this.#client.rest.checks.create({
+            const res = await this.#client.rest.checks.create({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
                 name: `terraform-pr-${cmd}`,
@@ -55,6 +55,10 @@ export class Terraform {
                     text: `Running Terraform ${cmd}`,
                 },
             });
+
+            if( res.status !== 201) {
+                throw new Error(`Failed to create check, status: ${res.status}`);
+            }
 
             switch (cmd) {
                 case Commands.Plan:
