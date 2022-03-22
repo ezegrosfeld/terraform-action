@@ -295,29 +295,29 @@ class Terraform {
             __classPrivateFieldSet(this, _Terraform_workspace, workspace, "f");
         };
         this.executeTerraform = (cmd, dir) => __awaiter(this, void 0, void 0, function* () {
+            if (dir !== '') {
+                __classPrivateFieldSet(this, _Terraform_chdir, dir, "f");
+            }
+            const def_dir = core.getInput('default_dir');
+            if (def_dir !== '') {
+                __classPrivateFieldSet(this, _Terraform_chdir, def_dir, "f");
+            }
+            const res = yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.checks.create({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                name: `terraform-pr-${cmd}`,
+                head_sha: github.context.sha,
+                status: 'in_progress',
+                output: {
+                    title: `Terraform ${cmd}`,
+                    summary: `Running Terraform ${cmd}`,
+                    text: `Running Terraform ${cmd}`,
+                },
+            });
+            if (res.status !== 201) {
+                throw new Error(`Failed to create check, status: ${res.status}`);
+            }
             try {
-                if (dir !== '') {
-                    __classPrivateFieldSet(this, _Terraform_chdir, dir, "f");
-                }
-                const def_dir = core.getInput('default_dir');
-                if (def_dir !== '') {
-                    __classPrivateFieldSet(this, _Terraform_chdir, def_dir, "f");
-                }
-                const res = yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.checks.create({
-                    owner: github.context.repo.owner,
-                    repo: github.context.repo.repo,
-                    name: `terraform-pr-${cmd}`,
-                    head_sha: github.context.sha,
-                    status: 'in_progress',
-                    output: {
-                        title: `Terraform ${cmd}`,
-                        summary: `Running Terraform ${cmd}`,
-                        text: `Running Terraform ${cmd}`,
-                    },
-                });
-                if (res.status !== 201) {
-                    throw new Error(`Failed to create check, status: ${res.status}`);
-                }
                 switch (cmd) {
                     case cmd_1.Commands.Plan:
                         __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
@@ -339,6 +339,7 @@ class Terraform {
                     repo: github.context.repo.repo,
                     name: `terraform-pr-${cmd}`,
                     head_sha: github.context.sha,
+                    check_run_id: res.data.id,
                     status: 'completed',
                     conclusion: 'success',
                     output: {
@@ -354,6 +355,7 @@ class Terraform {
                     repo: github.context.repo.repo,
                     name: `terraform-pr-${cmd}`,
                     head_sha: github.context.sha,
+                    check_run_id: res.data.id,
                     status: 'completed',
                     conclusion: 'failure',
                     output: {
@@ -394,12 +396,14 @@ class Terraform {
                 (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
                     core.startGroup('Terraform Workspace');
                     core.info(stdout);
-                    if (err) {
+                    /*if (err) {
                         throw new Error(err.message);
                     }
+
                     if (stderr) {
                         throw new Error(stderr);
                     }
+*/
                     core.endGroup();
                     try {
                         fn();

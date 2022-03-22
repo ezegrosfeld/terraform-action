@@ -32,34 +32,33 @@ export class Terraform {
     };
 
     executeTerraform = async (cmd: Commands, dir: string): Promise<void> => {
+        if (dir !== '') {
+            this.#chdir = dir;
+        }
+
+        const def_dir = core.getInput('default_dir');
+
+        if (def_dir !== '') {
+            this.#chdir = def_dir;
+        }
+
+        const res = await this.#client.rest.checks.create({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            name: `terraform-pr-${cmd}`,
+            head_sha: github.context.sha,
+            status: 'in_progress',
+            output: {
+                title: `Terraform ${cmd}`,
+                summary: `Running Terraform ${cmd}`,
+                text: `Running Terraform ${cmd}`,
+            },
+        });
+        if( res.status !== 201) {
+            throw new Error(`Failed to create check, status: ${res.status}`);
+        }
+
         try {
-            if (dir !== '') {
-                this.#chdir = dir;
-            }
-
-            const def_dir = core.getInput('default_dir');
-
-            if (def_dir !== '') {
-                this.#chdir = def_dir;
-            }
-
-            const res = await this.#client.rest.checks.create({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                name: `terraform-pr-${cmd}`,
-                head_sha: github.context.sha,
-                status: 'in_progress',
-                output: {
-                    title: `Terraform ${cmd}`,
-                    summary: `Running Terraform ${cmd}`,
-                    text: `Running Terraform ${cmd}`,
-                },
-            });
-
-            if( res.status !== 201) {
-                throw new Error(`Failed to create check, status: ${res.status}`);
-            }
-
             switch (cmd) {
                 case Commands.Plan:
                     this.#terraformInit(this.#plan);
@@ -82,6 +81,7 @@ export class Terraform {
                 repo: github.context.repo.repo,
                 name: `terraform-pr-${cmd}`,
                 head_sha: github.context.sha,
+                check_run_id: res.data.id,
                 status: 'completed',
                 conclusion: 'success',
                 output: {
@@ -90,13 +90,13 @@ export class Terraform {
                     text: `Terraform ${cmd} completed`,
                 },
             });
-
         } catch (e: any) {
             await this.#client.rest.checks.update({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
                 name: `terraform-pr-${cmd}`,
                 head_sha: github.context.sha,
+                check_run_id: res.data.id,
                 status: 'completed',
                 conclusion: 'failure',
                 output: {
@@ -148,14 +148,14 @@ export class Terraform {
                     core.startGroup('Terraform Workspace');
                     core.info(stdout);
 
-                    if (err) {
+                    /*if (err) {
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
                         throw new Error(stderr);
                     }
-
+*/
                     core.endGroup();
 
                     try {
