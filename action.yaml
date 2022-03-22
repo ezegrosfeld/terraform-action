@@ -7,9 +7,9 @@ inputs:
   github_token:
     required: true
     description: 'Token de github'
-  default_dir:
-    required: false
-    description: 'Default dir where terraform commands run'
+  config_file:
+    required: true
+    description: 'Path to the terraform config file'
 runs:
   using: 'node12'
   main: 'dist/index.js'

@@ -1,293 +1,336 @@
-import { exec } from 'child_process';
-import { Commands } from './utils/cmd';
-import { Octokit } from '@octokit/core';
+import {exec} from 'child_process';
+import {Commands} from './utils/cmd';
+import {Octokit} from '@octokit/core';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { formatOutput } from './utils/ouput';
+import {formatOutput} from './utils/ouput';
 
 declare const GitHub: typeof Octokit &
-	import('@octokit/core/dist-types/types').Constructor<
-		import('@octokit/plugin-rest-endpoint-methods/dist-types/types').Api & {
-			paginate: import('@octokit/plugin-paginate-rest').PaginateInterface;
-		}
-	>;
+    import('@octokit/core/dist-types/types').Constructor<import('@octokit/plugin-rest-endpoint-methods/dist-types/types').Api & {
+        paginate: import('@octokit/plugin-paginate-rest').PaginateInterface;
+    }>;
 
 export type Client = InstanceType<typeof GitHub>;
 
 export class Terraform {
-	#client: Client;
-	#workspace: string;
-	#chdir: string;
+    #client: Client;
+    #workspace: string;
+    #chdir: string;
 
-	constructor(client: Client) {
-		this.#client = client;
-		this.#workspace = 'dev';
-		this.#chdir = '.';
-	}
+    constructor(client: Client) {
+        this.#client = client;
+        this.#workspace = "dev";
+        this.#chdir = ".";
+    }
 
-	workspace = (workspace: string) => {
-		this.#workspace = workspace;
-	};
+    dir = (dir: string) => {
+        this.#chdir = dir;
+    }
 
-	executeTerraform = async (cmd: Commands, dir: string): Promise<void> => {
-		try {
-			if (dir !== '') {
-				this.#chdir = dir;
-			}
+    workspace = (workspace: string) => {
+        this.#workspace = workspace;
+    };
 
-			const def_dir = core.getInput('default_dir');
+    executeTerraform = async (cmd: Commands, dir: string): Promise<void> => {
+        try {
+            if (dir !== '') {
+                this.#chdir = dir;
+            }
 
-			if (def_dir !== '') {
-				this.#chdir = def_dir;
-			}
+            const def_dir = core.getInput('default_dir');
 
-			switch (cmd) {
-				case Commands.Plan:
-					this.#terraformInit(this.#plan);
-					break;
-				case Commands.Apply:
-					this.#terraformInit(this.#apply);
-					break;
-				case Commands.PlanDestroy:
-					this.#terraformInit(this.#planDestroy);
-					break;
-				case Commands.ApplyDestroy:
-					this.#terraformInit(this.#applyDestroy);
-					break;
-				default:
-					break;
-			}
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+            if (def_dir !== '') {
+                this.#chdir = def_dir;
+            }
 
-	#terraformInit = (fn: () => void) => {
-		try {
-			exec(
-				`terraform ${this.#chdir && '-chdir=' + this.#chdir} init -input=false`,
-				(err, stdout, stderr) => {
-					core.startGroup('Terraform Init');
-					core.info(stdout);
-					if (err) {
-						throw new Error(err.message);
-					}
+            await this.#client.rest.checks.create({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                name: `terraform-pr-${cmd}`,
+                head_sha: github.context.sha,
+                status: 'in_progress',
+                output: {
+                    title: `Terraform ${cmd}`,
+                    summary: `Running Terraform ${cmd}`,
+                    text: `Running Terraform ${cmd}`,
+                },
+            });
 
-					if (stderr) {
-						throw new Error(stderr);
-					}
-					core.endGroup();
-					try {
-						this.#setWorkspace(fn);
-					} catch (e: any) {
-						throw new Error(e);
-					}
-				}
-			);
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+            switch (cmd) {
+                case Commands.Plan:
+                    this.#terraformInit(this.#plan);
+                    break;
+                case Commands.Apply:
+                    this.#terraformInit(this.#apply);
+                    break;
+                case Commands.PlanDestroy:
+                    this.#terraformInit(this.#planDestroy);
+                    break;
+                case Commands.ApplyDestroy:
+                    this.#terraformInit(this.#applyDestroy);
+                    break;
+                default:
+                    break;
+            }
 
-	#setWorkspace = (fn: () => void) => {
-		try {
-			exec(
-				`terraform ${this.#chdir && '-chdir=' + this.#chdir} workspace select ${
-					this.#workspace
-				} || terraform ${
-					this.#chdir && '-chdir=' + this.#chdir
-				} workspace new ${this.#workspace}`,
-				(err, stdout, stderr) => {
-					core.startGroup('Terraform Workspace');
-					core.info(stdout);
+            await this.#client.rest.checks.update({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                name: `terraform-pr-${cmd}`,
+                head_sha: github.context.sha,
+                status: 'completed',
+                conclusion: 'success',
+                output: {
+                    title: `Terraform ${cmd}`,
+                    summary: `Terraform ${cmd} completed`,
+                    text: `Terraform ${cmd} completed`,
+                },
+            });
 
-					if (err) {
-						throw new Error(err.message);
-					}
+        } catch (e: any) {
+            await this.#client.rest.checks.update({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                name: `terraform-pr-${cmd}`,
+                head_sha: github.context.sha,
+                status: 'completed',
+                conclusion: 'failure',
+                output: {
+                    title: `Terraform ${cmd}`,
+                    summary: `Running Terraform ${cmd}`,
+                    text: `Running Terraform ${cmd}`,
+                },
+            });
+            throw new Error(e);
+        }
+    };
 
-					if (stderr) {
-						throw new Error(stderr);
-					}
+    #terraformInit = (fn: () => void) => {
+        try {
+            exec(
+                `terraform ${this.#chdir && '-chdir=' + this.#chdir} init -input=false`,
+                (err, stdout, stderr) => {
+                    core.startGroup('Terraform Init');
+                    core.info(stdout);
+                    if (err) {
+                        throw new Error(err.message);
+                    }
 
-					core.endGroup();
+                    if (stderr) {
+                        throw new Error(stderr);
+                    }
+                    core.endGroup();
+                    try {
+                        this.#setWorkspace(fn);
+                    } catch (e: any) {
+                        throw new Error(e);
+                    }
+                }
+            );
+        } catch (e: any) {
+            throw new Error(e);
+        }
+    };
 
-					try {
-						fn();
-					} catch (e: any) {
-						throw new Error(e);
-					}
-				}
-			);
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+    #setWorkspace = (fn: () => void) => {
+        try {
+            exec(
+                `terraform ${this.#chdir && '-chdir=' + this.#chdir} workspace select ${
+                    this.#workspace
+                } || terraform ${
+                    this.#chdir && '-chdir=' + this.#chdir
+                } workspace new ${this.#workspace}`,
+                (err, stdout, stderr) => {
+                    core.startGroup('Terraform Workspace');
+                    core.info(stdout);
 
-	#plan = (comment: boolean = true, fn?: () => void) => {
-		try {
-			exec(
-				`terraform ${this.#chdir && '-chdir=' + this.#chdir} plan -no-color`,
-				async (err, stdout, stderr) => {
-					core.startGroup('Terraform Plan');
-					core.info(stdout);
-					if (err) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment('Terraform `plan` failed', comment);
-						throw new Error(err.message);
-					}
+                    if (err) {
+                        throw new Error(err.message);
+                    }
 
-					if (stderr) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment('Terraform `plan` failed', comment);
-						throw new Error(stderr);
-					}
+                    if (stderr) {
+                        throw new Error(stderr);
+                    }
 
-					// add comment to issue with plan
-					if (comment) {
-						const msg = this.#buildOutputDetails(stdout);
-						await this.#createComment('Terraform `plan`', msg);
-					}
+                    core.endGroup();
 
-					typeof fn !== 'undefined' && fn();
+                    try {
+                        fn();
+                    } catch (e: any) {
+                        throw new Error(e);
+                    }
+                }
+            );
+        } catch (e: any) {
+            throw new Error(e);
+        }
+    };
 
-					core.endGroup();
-				}
-			);
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+    #plan = (comment: boolean = true, fn?: () => void) => {
+        try {
+            exec(
+                `terraform ${this.#chdir && '-chdir=' + this.#chdir} plan -no-color`,
+                async (err, stdout, stderr) => {
+                    core.startGroup('Terraform Plan');
+                    core.info(stdout);
+                    if (err) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment('Terraform `plan` failed', comment);
+                        throw new Error(err.message);
+                    }
 
-	#apply = () => {
-		try {
-			exec(
-				`terraform ${
-					this.#chdir && '-chdir=' + this.#chdir
-				} apply -no-color -auto-approve`,
-				async (err, stdout, stderr) => {
-					core.startGroup('Terraform Apply');
-					core.info(stdout);
+                    if (stderr) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment('Terraform `plan` failed', comment);
+                        throw new Error(stderr);
+                    }
 
-					if (err) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment('Terraform `apply` failed', comment);
-						throw new Error(err.message);
-					}
+                    // add comment to issue with plan
+                    if (comment) {
+                        const msg = this.#buildOutputDetails(stdout);
+                        await this.#createComment('Terraform `plan`', msg);
+                    }
 
-					if (stderr) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment('Terraform `apply` failed', comment);
-						throw new Error(stderr);
-					}
+                    typeof fn !== 'undefined' && fn();
 
-					const comment = this.#buildOutputDetails(stdout);
-					await this.#createComment('Terraform `apply`', comment);
+                    core.endGroup();
+                }
+            );
+        } catch (e: any) {
+            throw new Error(e);
+        }
+    };
 
-					core.endGroup();
-				}
-			);
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+    #apply = () => {
+        try {
+            exec(
+                `terraform ${
+                    this.#chdir && '-chdir=' + this.#chdir
+                } apply -no-color -auto-approve`,
+                async (err, stdout, stderr) => {
+                    core.startGroup('Terraform Apply');
+                    core.info(stdout);
 
-	#planDestroy = (comment: boolean = true, fn?: () => void) => {
-		try {
-			exec(
-				`terraform ${
-					this.#chdir && '-chdir=' + this.#chdir
-				} plan -destroy -no-color`,
-				async (err, stdout, stderr) => {
-					core.startGroup('Terraform Plan Destroy');
-					core.info(stdout);
+                    if (err) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment('Terraform `apply` failed', comment);
+                        throw new Error(err.message);
+                    }
 
-					if (err) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment(
-							'Terraform `plan-destroy` failed',
-							comment
-						);
-						throw new Error(err.message);
-					}
+                    if (stderr) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment('Terraform `apply` failed', comment);
+                        throw new Error(stderr);
+                    }
 
-					if (stderr) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment(
-							'Terraform `plan-destroy` failed',
-							comment
-						);
-						throw new Error(stderr);
-					}
+                    const comment = this.#buildOutputDetails(stdout);
+                    await this.#createComment('Terraform `apply`', comment);
 
-					// add comment to issue with plan
-					if (comment) {
-						const msg = this.#buildOutputDetails(stdout);
-						await this.#createComment('Terraform `plan-destroy`', msg);
-					}
+                    core.endGroup();
+                }
+            );
+        } catch (e: any) {
+            throw new Error(e);
+        }
+    };
 
-					typeof fn !== 'undefined' && fn();
+    #planDestroy = (comment: boolean = true, fn?: () => void) => {
+        try {
+            exec(
+                `terraform ${
+                    this.#chdir && '-chdir=' + this.#chdir
+                } plan -destroy -no-color`,
+                async (err, stdout, stderr) => {
+                    core.startGroup('Terraform Plan Destroy');
+                    core.info(stdout);
 
-					core.endGroup();
-				}
-			);
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+                    if (err) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment(
+                            'Terraform `plan-destroy` failed',
+                            comment
+                        );
+                        throw new Error(err.message);
+                    }
 
-	#applyDestroy = () => {
-		try {
-			exec(
-				`terraform ${
-					this.#chdir && '-chdir=' + this.#chdir
-				} apply -destroy -no-color -auto-approve`,
-				async (err, stdout, stderr) => {
-					core.startGroup('Terraform Apply Destroy');
-					core.info(stdout);
+                    if (stderr) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment(
+                            'Terraform `plan-destroy` failed',
+                            comment
+                        );
+                        throw new Error(stderr);
+                    }
 
-					if (err) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment(
-							'Terraform `apply-destroy` failed',
-							comment
-						);
-						throw new Error(err.message);
-					}
+                    // add comment to issue with plan
+                    if (comment) {
+                        const msg = this.#buildOutputDetails(stdout);
+                        await this.#createComment('Terraform `plan-destroy`', msg);
+                    }
 
-					if (stderr) {
-						const comment = this.#buildOutputDetails(stdout);
-						await this.#createComment(
-							'Terraform `apply-destroy` failed',
-							comment
-						);
-						throw new Error(stderr);
-					}
+                    typeof fn !== 'undefined' && fn();
 
-					const comment = this.#buildOutputDetails(stdout);
-					await this.#createComment('Terraform `apply-destroy`', comment);
+                    core.endGroup();
+                }
+            );
+        } catch (e: any) {
+            throw new Error(e);
+        }
+    };
 
-					core.endGroup();
-				}
-			);
-		} catch (e: any) {
-			throw new Error(e);
-		}
-	};
+    #applyDestroy = () => {
+        try {
+            exec(
+                `terraform ${
+                    this.#chdir && '-chdir=' + this.#chdir
+                } apply -destroy -no-color -auto-approve`,
+                async (err, stdout, stderr) => {
+                    core.startGroup('Terraform Apply Destroy');
+                    core.info(stdout);
 
-	#createComment = async (title: string, comment: string) => {
-		const msg = `## ${title}: \n\n${comment}`;
+                    if (err) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment(
+                            'Terraform `apply-destroy` failed',
+                            comment
+                        );
+                        throw new Error(err.message);
+                    }
 
-		await this.#client.rest.issues.createComment({
-			owner: github.context.repo.owner,
-			repo: github.context.repo.repo,
-			issue_number: github.context.issue.number,
-			body: msg
-		});
-	};
+                    if (stderr) {
+                        const comment = this.#buildOutputDetails(stdout);
+                        await this.#createComment(
+                            'Terraform `apply-destroy` failed',
+                            comment
+                        );
+                        throw new Error(stderr);
+                    }
 
-	#buildOutputDetails = (details: string): string => {
-		return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
-			details
-		)}\n\`\`\`\n\n</details>`;
-	};
+                    const comment = this.#buildOutputDetails(stdout);
+                    await this.#createComment('Terraform `apply-destroy`', comment);
+
+                    core.endGroup();
+                }
+            );
+        } catch (e: any) {
+            throw new Error(e);
+        }
+    };
+
+    #createComment = async (title: string, comment: string) => {
+        const msg = `## ${title}: \n\n${comment}`;
+
+        await this.#client.rest.issues.createComment({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            issue_number: github.context.issue.number,
+            body: msg,
+        });
+    };
+
+    #buildOutputDetails = (details: string): string => {
+        return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
+            details
+        )}\n\`\`\`\n\n</details>`;
+    };
 }

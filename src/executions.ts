@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { Client, Terraform } from './terraform';
 import { Commands, getCommand, isCommand } from './utils/cmd';
-import { getDir, getWorkspace } from './utils/flags';
+import { getDir } from './utils/flags';
 
 export const runFromComment = async (
 	body: string,
@@ -53,19 +53,22 @@ export const runFromPR = async (gh: Client, terra: Terraform) => {
 		});
 
 		// Get directories that have .tf files
-		const dirs = files.data
+		let dirs = files.data
 			.map((file) => file.filename)
 			.filter((file) => file.endsWith('.tf'));
 
 		core.info(`Modified terraform files: ${dirs}`);
 
-		// Get only the directory path
-		const dir = dirs.map((dir) => dir.split('/').slice(0, -1).join('/'));
+		// remove dirs inside a module folder
+		dirs = dirs.filter((dir) => !dir.includes('modules'));
 
-		core.info(`Modified terraform directories: ${dir}`);
+		// Get only the directory path
+		dirs = dirs.map((dir) => dir.split('/').slice(0, -1).join('/'));
+
+		core.info(`Modified terraform directories: ${dirs}`);
 
 		// for each directory run terraform plan
-		for (const d of dir) {
+		for (const d of dirs) {
 			await terra.executeTerraform(Commands.Plan, d);
 		}
 	} catch (err) {
