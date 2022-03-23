@@ -1,0 +1,4 @@
+default_workspace: dev
+default_dir: terraform_test
+pr_workspace: dev
+require_approval: false

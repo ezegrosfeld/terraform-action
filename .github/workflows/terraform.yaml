@@ -4,7 +4,7 @@ on:
     types:
       - 'created'
   pull_request:
-    types: [opened, reopened, synchronize, edited]
+    types: [ opened, reopened, synchronize, edited ]
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -18,3 +18,4 @@ jobs:
         name: 'Run Terraform'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: .
