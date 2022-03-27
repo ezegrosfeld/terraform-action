@@ -492,10 +492,9 @@ class Terraform {
             });
         }));
         _Terraform_buildOutputDetails.set(this, (details, message = false, workspace, dir) => {
-            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n\`\`\`\n\n</details>
+            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n\`\`\`\n${message ? (0, ouput_1.buildApplyMessage)(workspace, dir) : ''}\n</details>
         <h6>Directory: ${dir}</h6>
-        <h6>Workspace: ${workspace}</h6>
-        <h6><b>${message ? (0, ouput_1.buildApplyMessage)(workspace, dir) : ''}</b></h6>`;
+        <h6>Workspace: ${workspace}</h6>`;
         });
         __classPrivateFieldSet(this, _Terraform_client, client, "f");
         __classPrivateFieldSet(this, _Terraform_workspace, "dev", "f");
