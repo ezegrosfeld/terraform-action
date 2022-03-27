@@ -70,36 +70,7 @@ export class Terraform {
                 default:
                     break;
             }
-
-            await this.#client.rest.checks.update({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                name: `terraform-pr-${cmd}`,
-                head_sha: github.context.sha,
-                check_run_id: res.data.id,
-                status: 'completed',
-                conclusion: 'success',
-                output: {
-                    title: `Terraform ${cmd}`,
-                    summary: `Terraform ${cmd} completed`,
-                    text: `Terraform ${cmd} completed`,
-                },
-            });
         } catch (e: any) {
-            await this.#client.rest.checks.update({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                name: `terraform-pr-${cmd}`,
-                head_sha: github.context.sha,
-                check_run_id: res.data.id,
-                status: 'completed',
-                conclusion: 'failure',
-                output: {
-                    title: `Terraform ${cmd}`,
-                    summary: `Running Terraform ${cmd}`,
-                    text: `Running Terraform ${cmd}`,
-                },
-            });
             throw new Error(e);
         }
     };
@@ -108,15 +79,19 @@ export class Terraform {
         try {
             exec(
                 `terraform ${chdir && '-chdir=' + chdir} init -input=false`,
-                (err, stdout, stderr) => {
+                async (err, stdout, stderr) => {
                     core.startGroup('Terraform Init');
                     core.info(stdout);
                     if (err) {
-                        throw new Error(err.message);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
+                        await this.#createComment('Terraform `init` failed', comment);
+                        return
                     }
 
                     if (stderr) {
-                        throw new Error(stderr);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
+                        await this.#createComment('Terraform `init` failed', comment);
+                        return
                     }
                     core.endGroup();
                     try {
@@ -167,19 +142,20 @@ export class Terraform {
                     if (err) {
                         const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
-                        throw new Error(err.message);
+                        return
                     }
 
                     if (stderr) {
                         const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
-                        throw new Error(stderr);
+                        return
                     }
 
                     // add comment to issue with plan
                     if (comment) {
                         const msg = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan`', msg);
+                        return
                     }
 
                     typeof fn !== 'undefined' && fn();
@@ -205,13 +181,11 @@ export class Terraform {
                     if (err) {
                         const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment('Terraform `apply` failed', comment);
-                        throw new Error(err.message);
                     }
 
                     if (stderr) {
                         const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment('Terraform `apply` failed', comment);
-                        throw new Error(stderr);
                     }
 
                     const comment = this.#buildOutputDetails(stdout, false);
@@ -241,7 +215,7 @@ export class Terraform {
                             'Terraform `plan-destroy` failed',
                             comment
                         );
-                        throw new Error(err.message);
+                        return
                     }
 
                     if (stderr) {
@@ -250,7 +224,7 @@ export class Terraform {
                             'Terraform `plan-destroy` failed',
                             comment
                         );
-                        throw new Error(stderr);
+                        return
                     }
 
                     // add comment to issue with plan
@@ -285,7 +259,6 @@ export class Terraform {
                             'Terraform `apply-destroy` failed',
                             comment
                         );
-                        throw new Error(err.message);
                     }
 
                     if (stderr) {
@@ -294,7 +267,6 @@ export class Terraform {
                             'Terraform `apply-destroy` failed',
                             comment
                         );
-                        throw new Error(stderr);
                     }
 
                     const comment = this.#buildOutputDetails(stdout, false);
@@ -323,6 +295,8 @@ export class Terraform {
         return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
             details
         )}\n\`\`\`\n\n</details>
-        ${message ? buildApplyMessage(workspace, dir) : ''}`;
+        <h6>Directory: ${dir}</h6>
+        <h6>Workspace: ${workspace}</h6>
+        <h6><b>${message ? buildApplyMessage(workspace, dir) : ''}</b></h6>`
     };
 }
