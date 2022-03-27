@@ -1,5 +1,5 @@
 resource "time_offset" "example" {
-  offset_days = 7
+  offset_days = 3
 }
 
 output "one_week_from_now" {
