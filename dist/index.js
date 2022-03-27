@@ -144,7 +144,7 @@ const runFromPR = (gh, terra) => __awaiter(void 0, void 0, void 0, function* () 
         dirs = Array.from(new Set(dirs));
         core.info(`Modified terraform directories: ${dirs}`);
         // for each directory run terraform plan
-        for (const d of dirs) {
+        for (let d of dirs) {
             yield terra.executeTerraform(cmd_1.Commands.Plan, d);
         }
     }
@@ -206,7 +206,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         core.info('Getting configuration');
         const config = new configuration_1.Configuration(core.getInput('config_file')).getConfiguration();
         terra.workspace(config.default_workspace);
-        terra.dir(config.default_dir);
         const comment = github.context.payload.comment;
         if (typeof comment === 'undefined' || !comment) {
             terra.workspace(config.pr_workspace);
@@ -275,7 +274,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _Terraform_client, _Terraform_workspace, _Terraform_chdir, _Terraform_terraformInit, _Terraform_setWorkspace, _Terraform_plan, _Terraform_apply, _Terraform_planDestroy, _Terraform_applyDestroy, _Terraform_createComment, _Terraform_buildOutputDetails;
+var _Terraform_client, _Terraform_workspace, _Terraform_terraformInit, _Terraform_setWorkspace, _Terraform_plan, _Terraform_apply, _Terraform_planDestroy, _Terraform_applyDestroy, _Terraform_createComment, _Terraform_buildOutputDetails;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Terraform = void 0;
 const child_process_1 = __nccwpck_require__(2081);
@@ -287,20 +286,17 @@ class Terraform {
     constructor(client) {
         _Terraform_client.set(this, void 0);
         _Terraform_workspace.set(this, void 0);
-        _Terraform_chdir.set(this, void 0);
-        this.dir = (dir) => {
-            __classPrivateFieldSet(this, _Terraform_chdir, dir, "f");
-        };
         this.workspace = (workspace) => {
             __classPrivateFieldSet(this, _Terraform_workspace, workspace, "f");
         };
         this.executeTerraform = (cmd, dir) => __awaiter(this, void 0, void 0, function* () {
+            let chdir = ".";
             if (dir !== '') {
-                __classPrivateFieldSet(this, _Terraform_chdir, dir, "f");
+                chdir = dir;
             }
             const def_dir = core.getInput('default_dir');
             if (def_dir !== '') {
-                __classPrivateFieldSet(this, _Terraform_chdir, def_dir, "f");
+                chdir = def_dir;
             }
             const res = yield __classPrivateFieldGet(this, _Terraform_client, "f").rest.checks.create({
                 owner: github.context.repo.owner,
@@ -320,16 +316,16 @@ class Terraform {
             try {
                 switch (cmd) {
                     case cmd_1.Commands.Plan:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_plan, "f"));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, chdir, () => __classPrivateFieldGet(this, _Terraform_plan, "f").call(this, chdir));
                         break;
                     case cmd_1.Commands.Apply:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_apply, "f"));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, chdir, () => __classPrivateFieldGet(this, _Terraform_apply, "f").call(this, chdir));
                         break;
                     case cmd_1.Commands.PlanDestroy:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_planDestroy, "f"));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, chdir, () => __classPrivateFieldGet(this, _Terraform_planDestroy, "f").call(this, chdir));
                         break;
                     case cmd_1.Commands.ApplyDestroy:
-                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, __classPrivateFieldGet(this, _Terraform_applyDestroy, "f"));
+                        __classPrivateFieldGet(this, _Terraform_terraformInit, "f").call(this, chdir, () => __classPrivateFieldGet(this, _Terraform_applyDestroy, "f").call(this, chdir));
                         break;
                     default:
                         break;
@@ -367,9 +363,9 @@ class Terraform {
                 throw new Error(e);
             }
         });
-        _Terraform_terraformInit.set(this, (fn) => {
+        _Terraform_terraformInit.set(this, (chdir, fn) => {
             try {
-                (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} init -input=false`, (err, stdout, stderr) => {
+                (0, child_process_1.exec)(`terraform ${chdir && '-chdir=' + chdir} init -input=false`, (err, stdout, stderr) => {
                     core.startGroup('Terraform Init');
                     core.info(stdout);
                     if (err) {
@@ -380,7 +376,7 @@ class Terraform {
                     }
                     core.endGroup();
                     try {
-                        __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, fn);
+                        __classPrivateFieldGet(this, _Terraform_setWorkspace, "f").call(this, chdir, fn);
                     }
                     catch (e) {
                         throw new Error(e);
@@ -391,19 +387,11 @@ class Terraform {
                 throw new Error(e);
             }
         });
-        _Terraform_setWorkspace.set(this, (fn) => {
+        _Terraform_setWorkspace.set(this, (chdir, fn) => {
             try {
-                (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
+                (0, child_process_1.exec)(`terraform ${chdir && '-chdir=' + chdir} workspace select ${__classPrivateFieldGet(this, _Terraform_workspace, "f")} || terraform ${chdir && '-chdir=' + chdir} workspace new ${__classPrivateFieldGet(this, _Terraform_workspace, "f")}`, (err, stdout, stderr) => {
                     core.startGroup('Terraform Workspace');
                     core.info(stdout);
-                    /*if (err) {
-                        throw new Error(err.message);
-                    }
-
-                    if (stderr) {
-                        throw new Error(stderr);
-                    }
-*/
                     core.endGroup();
                     try {
                         fn();
@@ -417,24 +405,24 @@ class Terraform {
                 throw new Error(e);
             }
         });
-        _Terraform_plan.set(this, (comment = true, fn) => {
+        _Terraform_plan.set(this, (chdir, comment = true, fn) => {
             try {
-                (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} plan -no-color`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                (0, child_process_1.exec)(`terraform ${chdir && '-chdir=' + chdir} plan -no-color`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                     core.startGroup('Terraform Plan');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
                         throw new Error(stderr);
                     }
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', msg);
                     }
                     typeof fn !== 'undefined' && fn();
@@ -445,22 +433,22 @@ class Terraform {
                 throw new Error(e);
             }
         });
-        _Terraform_apply.set(this, () => {
+        _Terraform_apply.set(this, (chdir) => {
             try {
-                (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} apply -no-color -auto-approve`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                (0, child_process_1.exec)(`terraform ${chdir && '-chdir=' + chdir} apply -no-color -auto-approve`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                     core.startGroup('Terraform Apply');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                         throw new Error(stderr);
                     }
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
                     core.endGroup();
                 }));
@@ -469,24 +457,24 @@ class Terraform {
                 throw new Error(e);
             }
         });
-        _Terraform_planDestroy.set(this, (comment = true, fn) => {
+        _Terraform_planDestroy.set(this, (chdir, comment = true, fn) => {
             try {
-                (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} plan -destroy -no-color`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                (0, child_process_1.exec)(`terraform ${chdir && '-chdir=' + chdir} plan -destroy -no-color`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                     core.startGroup('Terraform Plan Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
                         throw new Error(stderr);
                     }
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy`', msg);
                     }
                     typeof fn !== 'undefined' && fn();
@@ -497,22 +485,22 @@ class Terraform {
                 throw new Error(e);
             }
         });
-        _Terraform_applyDestroy.set(this, () => {
+        _Terraform_applyDestroy.set(this, (chdir) => {
             try {
-                (0, child_process_1.exec)(`terraform ${__classPrivateFieldGet(this, _Terraform_chdir, "f") && '-chdir=' + __classPrivateFieldGet(this, _Terraform_chdir, "f")} apply -destroy -no-color -auto-approve`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                (0, child_process_1.exec)(`terraform ${chdir && '-chdir=' + chdir} apply -destroy -no-color -auto-approve`, (err, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
                     core.startGroup('Terraform Apply Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                         throw new Error(stderr);
                     }
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout);
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy`', comment);
                     core.endGroup();
                 }));
@@ -530,16 +518,16 @@ class Terraform {
                 body: msg,
             });
         }));
-        _Terraform_buildOutputDetails.set(this, (details) => {
-            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n\`\`\`\n\n</details>`;
+        _Terraform_buildOutputDetails.set(this, (details, message = false, workspace, dir) => {
+            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n\`\`\`\n\n</details>
+        ${message ? (0, ouput_1.buildApplyMessage)(workspace, dir) : ''}`;
         });
         __classPrivateFieldSet(this, _Terraform_client, client, "f");
         __classPrivateFieldSet(this, _Terraform_workspace, "dev", "f");
-        __classPrivateFieldSet(this, _Terraform_chdir, ".", "f");
     }
 }
 exports.Terraform = Terraform;
-_Terraform_client = new WeakMap(), _Terraform_workspace = new WeakMap(), _Terraform_chdir = new WeakMap(), _Terraform_terraformInit = new WeakMap(), _Terraform_setWorkspace = new WeakMap(), _Terraform_plan = new WeakMap(), _Terraform_apply = new WeakMap(), _Terraform_planDestroy = new WeakMap(), _Terraform_applyDestroy = new WeakMap(), _Terraform_createComment = new WeakMap(), _Terraform_buildOutputDetails = new WeakMap();
+_Terraform_client = new WeakMap(), _Terraform_workspace = new WeakMap(), _Terraform_terraformInit = new WeakMap(), _Terraform_setWorkspace = new WeakMap(), _Terraform_plan = new WeakMap(), _Terraform_apply = new WeakMap(), _Terraform_planDestroy = new WeakMap(), _Terraform_applyDestroy = new WeakMap(), _Terraform_createComment = new WeakMap(), _Terraform_buildOutputDetails = new WeakMap();
 
 
 /***/ }),
@@ -613,7 +601,7 @@ exports.getWorkspace = getWorkspace;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.formatOutput = void 0;
+exports.buildApplyMessage = exports.formatOutput = void 0;
 const formatOutput = (output) => {
     // remove all commands that have :: in them
     const outputLines = output.split('\n').filter((line) => !line.includes('::'));
@@ -640,6 +628,15 @@ const formatOutput = (output) => {
     return output;
 };
 exports.formatOutput = formatOutput;
+const buildApplyMessage = (workspace, dir) => {
+    return `
+	💡 To plan: terraform plan -w ${workspace} -d ${dir}
+	🚀 To apply: terraform apply -w ${workspace} -d ${dir}
+	👀 To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
+	💀 To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
+	`;
+};
+exports.buildApplyMessage = buildApplyMessage;
 
 
 /***/ }),

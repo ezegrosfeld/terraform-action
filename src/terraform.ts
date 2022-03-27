@@ -3,7 +3,7 @@ import {Commands} from './utils/cmd';
 import {Octokit} from '@octokit/core';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import {formatOutput} from './utils/ouput';
+import {buildApplyMessage, formatOutput} from './utils/ouput';
 
 declare const GitHub: typeof Octokit &
     import('@octokit/core/dist-types/types').Constructor<import('@octokit/plugin-rest-endpoint-methods/dist-types/types').Api & {
@@ -15,16 +15,10 @@ export type Client = InstanceType<typeof GitHub>;
 export class Terraform {
     #client: Client;
     #workspace: string;
-    #chdir: string;
 
     constructor(client: Client) {
         this.#client = client;
         this.#workspace = "dev";
-        this.#chdir = ".";
-    }
-
-    dir = (dir: string) => {
-        this.#chdir = dir;
     }
 
     workspace = (workspace: string) => {
@@ -32,14 +26,15 @@ export class Terraform {
     };
 
     executeTerraform = async (cmd: Commands, dir: string): Promise<void> => {
+        let chdir = "."
         if (dir !== '') {
-            this.#chdir = dir;
+            chdir = dir;
         }
 
         const def_dir = core.getInput('default_dir');
 
         if (def_dir !== '') {
-            this.#chdir = def_dir;
+            chdir = def_dir;
         }
 
         const res = await this.#client.rest.checks.create({
@@ -54,23 +49,23 @@ export class Terraform {
                 text: `Running Terraform ${cmd}`,
             },
         });
-        if( res.status !== 201) {
+        if (res.status !== 201) {
             throw new Error(`Failed to create check, status: ${res.status}`);
         }
 
         try {
             switch (cmd) {
                 case Commands.Plan:
-                    this.#terraformInit(this.#plan);
+                    this.#terraformInit(chdir, () => this.#plan(chdir));
                     break;
                 case Commands.Apply:
-                    this.#terraformInit(this.#apply);
+                    this.#terraformInit(chdir, () => this.#apply(chdir));
                     break;
                 case Commands.PlanDestroy:
-                    this.#terraformInit(this.#planDestroy);
+                    this.#terraformInit(chdir, () => this.#planDestroy(chdir));
                     break;
                 case Commands.ApplyDestroy:
-                    this.#terraformInit(this.#applyDestroy);
+                    this.#terraformInit(chdir, () => this.#applyDestroy(chdir));
                     break;
                 default:
                     break;
@@ -109,10 +104,10 @@ export class Terraform {
         }
     };
 
-    #terraformInit = (fn: () => void) => {
+    #terraformInit = (chdir: string, fn: () => void) => {
         try {
             exec(
-                `terraform ${this.#chdir && '-chdir=' + this.#chdir} init -input=false`,
+                `terraform ${chdir && '-chdir=' + chdir} init -input=false`,
                 (err, stdout, stderr) => {
                     core.startGroup('Terraform Init');
                     core.info(stdout);
@@ -125,7 +120,7 @@ export class Terraform {
                     }
                     core.endGroup();
                     try {
-                        this.#setWorkspace(fn);
+                        this.#setWorkspace(chdir, fn);
                     } catch (e: any) {
                         throw new Error(e);
                     }
@@ -136,26 +131,18 @@ export class Terraform {
         }
     };
 
-    #setWorkspace = (fn: () => void) => {
+    #setWorkspace = (chdir: string, fn: () => void) => {
         try {
             exec(
-                `terraform ${this.#chdir && '-chdir=' + this.#chdir} workspace select ${
+                `terraform ${chdir && '-chdir=' + chdir} workspace select ${
                     this.#workspace
                 } || terraform ${
-                    this.#chdir && '-chdir=' + this.#chdir
+                    chdir && '-chdir=' + chdir
                 } workspace new ${this.#workspace}`,
                 (err, stdout, stderr) => {
                     core.startGroup('Terraform Workspace');
                     core.info(stdout);
 
-                    /*if (err) {
-                        throw new Error(err.message);
-                    }
-
-                    if (stderr) {
-                        throw new Error(stderr);
-                    }
-*/
                     core.endGroup();
 
                     try {
@@ -170,28 +157,28 @@ export class Terraform {
         }
     };
 
-    #plan = (comment: boolean = true, fn?: () => void) => {
+    #plan = (chdir: string, comment: boolean = true, fn?: () => void) => {
         try {
             exec(
-                `terraform ${this.#chdir && '-chdir=' + this.#chdir} plan -no-color`,
+                `terraform ${chdir && '-chdir=' + chdir} plan -no-color`,
                 async (err, stdout, stderr) => {
                     core.startGroup('Terraform Plan');
                     core.info(stdout);
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
                         throw new Error(stderr);
                     }
 
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = this.#buildOutputDetails(stdout);
+                        const msg = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan`', msg);
                     }
 
@@ -205,29 +192,29 @@ export class Terraform {
         }
     };
 
-    #apply = () => {
+    #apply = (chdir: string) => {
         try {
             exec(
                 `terraform ${
-                    this.#chdir && '-chdir=' + this.#chdir
+                    chdir && '-chdir=' + chdir
                 } apply -no-color -auto-approve`,
                 async (err, stdout, stderr) => {
                     core.startGroup('Terraform Apply');
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment('Terraform `apply` failed', comment);
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment('Terraform `apply` failed', comment);
                         throw new Error(stderr);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout);
+                    const comment = this.#buildOutputDetails(stdout, false);
                     await this.#createComment('Terraform `apply`', comment);
 
                     core.endGroup();
@@ -238,18 +225,18 @@ export class Terraform {
         }
     };
 
-    #planDestroy = (comment: boolean = true, fn?: () => void) => {
+    #planDestroy = (chdir: string, comment: boolean = true, fn?: () => void) => {
         try {
             exec(
                 `terraform ${
-                    this.#chdir && '-chdir=' + this.#chdir
+                    chdir && '-chdir=' + chdir
                 } plan -destroy -no-color`,
                 async (err, stdout, stderr) => {
                     core.startGroup('Terraform Plan Destroy');
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment(
                             'Terraform `plan-destroy` failed',
                             comment
@@ -258,7 +245,7 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment(
                             'Terraform `plan-destroy` failed',
                             comment
@@ -268,7 +255,7 @@ export class Terraform {
 
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = this.#buildOutputDetails(stdout);
+                        const msg = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan-destroy`', msg);
                     }
 
@@ -282,18 +269,18 @@ export class Terraform {
         }
     };
 
-    #applyDestroy = () => {
+    #applyDestroy = (chdir: string) => {
         try {
             exec(
                 `terraform ${
-                    this.#chdir && '-chdir=' + this.#chdir
+                    chdir && '-chdir=' + chdir
                 } apply -destroy -no-color -auto-approve`,
                 async (err, stdout, stderr) => {
                     core.startGroup('Terraform Apply Destroy');
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -302,7 +289,7 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -310,7 +297,7 @@ export class Terraform {
                         throw new Error(stderr);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout);
+                    const comment = this.#buildOutputDetails(stdout, false);
                     await this.#createComment('Terraform `apply-destroy`', comment);
 
                     core.endGroup();
@@ -332,9 +319,10 @@ export class Terraform {
         });
     };
 
-    #buildOutputDetails = (details: string): string => {
+    #buildOutputDetails = (details: string, message: boolean = false, workspace?: string, dir?: string): string => {
         return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
             details
-        )}\n\`\`\`\n\n</details>`;
+        )}\n\`\`\`\n\n</details>
+        ${message ? buildApplyMessage(workspace, dir) : ''}`;
     };
 }

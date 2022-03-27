@@ -70,7 +70,7 @@ export const runFromPR = async (gh: Client, terra: Terraform) => {
         core.info(`Modified terraform directories: ${dirs}`);
 
         // for each directory run terraform plan
-        for (const d of dirs) {
+        for (let d of dirs) {
             await terra.executeTerraform(Commands.Plan, d);
         }
     } catch (err) {
