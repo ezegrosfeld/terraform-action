@@ -294,7 +294,7 @@ export class Terraform {
     #buildOutputDetails = (details: string, message: boolean = false, workspace?: string, dir?: string): string => {
         return `<details><summary>Show output</summary>\n<p>\n\n\`\`\`diff\n${formatOutput(
             details
-        )}\n\`\`\`\n${message ? `###### 💡 To plan:\n\t\t\tterraform plan -w ${workspace} -d ${dir}\n###### 🚀 To apply\n\t\t\:terraform apply -w ${workspace} -d ${dir}\n###### 👀 To plan-destroy: \`terraform plan-destroy -w ${workspace} -d ${dir}\`\n###### 💀 To apply-destroy: \`terraform apply-destroy -w ${workspace} -d ${dir}\`\n` : ''}</p></details>
+        )}\n\`\`\`\n${message ? `###### 💡 To plan:\n\tterraform plan -w ${workspace} -d ${dir}\n###### 🚀 To apply\n\tterraform apply -w ${workspace} -d ${dir}\n###### 👀 To plan-destroy: \`terraform plan-destroy -w ${workspace} -d ${dir}\`\n###### 💀 To apply-destroy: \`terraform apply-destroy -w ${workspace} -d ${dir}\`\n` : ''}</p></details>
         <hr/>
         <h6>Directory: ${dir}</h6>
         <h6>Workspace: ${workspace}</h6>`
