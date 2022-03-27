@@ -44,9 +44,9 @@ export const formatOutput = (output: string): string => {
 
 export const buildApplyMessage = (workspace?: string, dir?: string) => {
     return `
-	💡 To plan: ***terraform plan -w ${workspace} -d ${dir}***
+	💡 To plan: terraform plan -w ${workspace} -d ${dir}
 	🚀 To apply: terraform apply -w ${workspace} -d ${dir}
-	☠ To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
-	☠ To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
+	👀 To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
+	💀 To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
 	`;
 }

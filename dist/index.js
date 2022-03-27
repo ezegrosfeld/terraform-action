@@ -519,7 +519,8 @@ class Terraform {
             });
         }));
         _Terraform_buildOutputDetails.set(this, (details, message = false, workspace, dir) => {
-            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n${message ? (0, ouput_1.buildApplyMessage)(workspace, dir) + '\n' : ''}\`\`\`\n\n</details>`;
+            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n\`\`\`\n\n</details>
+        ${message ? (0, ouput_1.buildApplyMessage)(workspace, dir) : ''}`;
         });
         __classPrivateFieldSet(this, _Terraform_client, client, "f");
         __classPrivateFieldSet(this, _Terraform_workspace, "dev", "f");
@@ -629,10 +630,10 @@ const formatOutput = (output) => {
 exports.formatOutput = formatOutput;
 const buildApplyMessage = (workspace, dir) => {
     return `
-	💡 To plan: ***terraform plan -w ${workspace} -d ${dir}***
+	💡 To plan: terraform plan -w ${workspace} -d ${dir}
 	🚀 To apply: terraform apply -w ${workspace} -d ${dir}
-	☠ To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
-	☠ To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
+	👀 To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
+	💀 To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
 	`;
 };
 exports.buildApplyMessage = buildApplyMessage;

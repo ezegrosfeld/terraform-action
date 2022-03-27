@@ -322,6 +322,7 @@ export class Terraform {
     #buildOutputDetails = (details: string, message: boolean = false, workspace?: string, dir?: string): string => {
         return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
             details
-        )}\n${message ? buildApplyMessage(workspace, dir) + '\n' : ''}\`\`\`\n\n</details>`;
+        )}\n\`\`\`\n\n</details>
+        ${message ? buildApplyMessage(workspace, dir) : ''}`;
     };
 }
