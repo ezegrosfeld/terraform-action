@@ -3,7 +3,7 @@ import {Commands} from './utils/cmd';
 import {Octokit} from '@octokit/core';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import {formatOutput} from './utils/ouput';
+import {buildApplyMessage, formatOutput} from './utils/ouput';
 
 declare const GitHub: typeof Octokit &
     import('@octokit/core/dist-types/types').Constructor<import('@octokit/plugin-rest-endpoint-methods/dist-types/types').Api & {
@@ -148,14 +148,6 @@ export class Terraform {
                     core.startGroup('Terraform Workspace');
                     core.info(stdout);
 
-                    /*if (err) {
-                        throw new Error(err.message);
-                    }
-
-                    if (stderr) {
-                        throw new Error(stderr);
-                    }
-*/
                     core.endGroup();
 
                     try {
@@ -178,20 +170,20 @@ export class Terraform {
                     core.startGroup('Terraform Plan');
                     core.info(stdout);
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
                         throw new Error(stderr);
                     }
 
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = this.#buildOutputDetails(stdout);
+                        const msg = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment('Terraform `plan`', msg);
                     }
 
@@ -216,18 +208,18 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment('Terraform `apply` failed', comment);
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment('Terraform `apply` failed', comment);
                         throw new Error(stderr);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout);
+                    const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                     await this.#createComment('Terraform `apply`', comment);
 
                     core.endGroup();
@@ -249,7 +241,7 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment(
                             'Terraform `plan-destroy` failed',
                             comment
@@ -258,7 +250,7 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment(
                             'Terraform `plan-destroy` failed',
                             comment
@@ -268,7 +260,7 @@ export class Terraform {
 
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = this.#buildOutputDetails(stdout);
+                        const msg = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment('Terraform `plan-destroy`', msg);
                     }
 
@@ -293,7 +285,7 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -302,7 +294,7 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout);
+                        const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -310,7 +302,7 @@ export class Terraform {
                         throw new Error(stderr);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout);
+                    const comment = this.#buildOutputDetails(stdout, this.#workspace, this.#chdir);
                     await this.#createComment('Terraform `apply-destroy`', comment);
 
                     core.endGroup();
@@ -332,9 +324,9 @@ export class Terraform {
         });
     };
 
-    #buildOutputDetails = (details: string): string => {
+    #buildOutputDetails = (details: string, workspace: string, dir: string): string => {
         return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
             details
-        )}\n\`\`\`\n\n</details>`;
+        )}\n${buildApplyMessage(workspace, dir)}\n\`\`\`\n\n</details>`;
     };
 }
