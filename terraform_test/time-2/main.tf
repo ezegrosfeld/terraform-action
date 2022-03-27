@@ -1,6 +1,6 @@
 terraform {
   backend "local" {
-    path = "${path.module}/time-2.tfstate"
+    path = "./time-2.tfstate"
   }
   required_providers {
     time = {
