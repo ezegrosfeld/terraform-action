@@ -165,20 +165,20 @@ export class Terraform {
                     core.startGroup('Terraform Plan');
                     core.info(stdout);
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan` failed', comment);
                         throw new Error(stderr);
                     }
 
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const msg = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan`', msg);
                     }
 
@@ -203,18 +203,18 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment('Terraform `apply` failed', comment);
                         throw new Error(err.message);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment('Terraform `apply` failed', comment);
                         throw new Error(stderr);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                    const comment = this.#buildOutputDetails(stdout, false);
                     await this.#createComment('Terraform `apply`', comment);
 
                     core.endGroup();
@@ -236,7 +236,7 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment(
                             'Terraform `plan-destroy` failed',
                             comment
@@ -245,7 +245,7 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment(
                             'Terraform `plan-destroy` failed',
                             comment
@@ -255,7 +255,7 @@ export class Terraform {
 
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const msg = this.#buildOutputDetails(stdout, true, this.#workspace, chdir);
                         await this.#createComment('Terraform `plan-destroy`', msg);
                     }
 
@@ -280,7 +280,7 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -289,7 +289,7 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                        const comment = this.#buildOutputDetails(stdout, false);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -297,7 +297,7 @@ export class Terraform {
                         throw new Error(stderr);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout, this.#workspace, chdir);
+                    const comment = this.#buildOutputDetails(stdout, false);
                     await this.#createComment('Terraform `apply-destroy`', comment);
 
                     core.endGroup();
@@ -319,9 +319,9 @@ export class Terraform {
         });
     };
 
-    #buildOutputDetails = (details: string, workspace: string, dir: string): string => {
+    #buildOutputDetails = (details: string, message: boolean = false, workspace?: string, dir?: string): string => {
         return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${formatOutput(
             details
-        )}\n${buildApplyMessage(workspace, dir)}\n\`\`\`\n\n</details>`;
+        )}\n${message ? buildApplyMessage(workspace, dir) + '\n' : ''}\`\`\`\n\n</details>`;
     };
 }

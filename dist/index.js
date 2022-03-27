@@ -411,18 +411,18 @@ class Terraform {
                     core.startGroup('Terraform Plan');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan` failed', comment);
                         throw new Error(stderr);
                     }
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan`', msg);
                     }
                     typeof fn !== 'undefined' && fn();
@@ -439,16 +439,16 @@ class Terraform {
                     core.startGroup('Terraform Apply');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                         throw new Error(stderr);
                     }
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
                     core.endGroup();
                 }));
@@ -463,18 +463,18 @@ class Terraform {
                     core.startGroup('Terraform Plan Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy` failed', comment);
                         throw new Error(stderr);
                     }
                     // add comment to issue with plan
                     if (comment) {
-                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const msg = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, true, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `plan-destroy`', msg);
                     }
                     typeof fn !== 'undefined' && fn();
@@ -491,16 +491,16 @@ class Terraform {
                     core.startGroup('Terraform Apply Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                         throw new Error(err.message);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                         throw new Error(stderr);
                     }
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy`', comment);
                     core.endGroup();
                 }));
@@ -518,8 +518,8 @@ class Terraform {
                 body: msg,
             });
         }));
-        _Terraform_buildOutputDetails.set(this, (details, workspace, dir) => {
-            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n${(0, ouput_1.buildApplyMessage)(workspace, dir)}\n\`\`\`\n\n</details>`;
+        _Terraform_buildOutputDetails.set(this, (details, message = false, workspace, dir) => {
+            return `<details><summary>Show output</summary>\n\n\`\`\`diff\n${(0, ouput_1.formatOutput)(details)}\n${message ? (0, ouput_1.buildApplyMessage)(workspace, dir) + '\n' : ''}\`\`\`\n\n</details>`;
         });
         __classPrivateFieldSet(this, _Terraform_client, client, "f");
         __classPrivateFieldSet(this, _Terraform_workspace, "dev", "f");
@@ -629,10 +629,10 @@ const formatOutput = (output) => {
 exports.formatOutput = formatOutput;
 const buildApplyMessage = (workspace, dir) => {
     return `
-	To plan: terraform plan -w ${workspace} -d ${dir}
-	To apply: terraform apply -w ${workspace} -d ${dir}
-	To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
-	To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
+	💡 To plan: ***terraform plan -w ${workspace} -d ${dir}***
+	🚀 To apply: terraform apply -w ${workspace} -d ${dir}
+	☠ To plan-destroy: terraform plan-destroy -w ${workspace} -d ${dir}
+	☠ To apply-destroy: terraform apply-destroy -w ${workspace} -d ${dir}
 	`;
 };
 exports.buildApplyMessage = buildApplyMessage;
