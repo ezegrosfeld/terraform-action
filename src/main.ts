@@ -13,7 +13,6 @@ const run = async (): Promise<void> => {
         const config = new Configuration(core.getInput('config_file')).getConfiguration()
 
         terra.workspace(config.default_workspace)
-        terra.dir(config.default_dir)
 
         const comment = github.context.payload.comment;
         if (typeof comment === 'undefined' || !comment) {
