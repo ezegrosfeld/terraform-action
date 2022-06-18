@@ -179,16 +179,16 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout, false);
+                        const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                         await this.#createComment('Terraform `apply` failed', comment);
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout, false);
+                        const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                         await this.#createComment('Terraform `apply` failed', comment);
                     }
 
-                    const comment = this.#buildOutputDetails(stdout, false);
+                    const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                     await this.#createComment('Terraform `apply`', comment);
 
                     core.endGroup();
@@ -254,7 +254,7 @@ export class Terraform {
                     core.info(stdout);
 
                     if (err) {
-                        const comment = this.#buildOutputDetails(stdout, false);
+                        const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
@@ -262,14 +262,14 @@ export class Terraform {
                     }
 
                     if (stderr) {
-                        const comment = this.#buildOutputDetails(stdout, false);
+                        const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                         await this.#createComment(
                             'Terraform `apply-destroy` failed',
                             comment
                         );
                     }
 
-                    const comment = this.#buildOutputDetails(stdout, false);
+                    const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                     await this.#createComment('Terraform `apply-destroy`', comment);
 
                     core.endGroup();

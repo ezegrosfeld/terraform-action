@@ -117,7 +117,20 @@ const runFromComment = (body, gh, terra) => __awaiter(void 0, void 0, void 0, fu
         // react to comment event with rocket emoji
         const emoji = 'rocket';
         gh.rest.reactions.createForIssueComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: github.context.payload.comment.id, content: emoji }));
-        yield terra.executeTerraform(command, dir);
+        if ((0, flags_1.isAllServices)(body)) {
+            // not implemented
+            throw new Error('not implemented');
+        }
+        else if ((0, flags_1.isAllModified)(body)) {
+            let dirs = yield getModifiedServices(gh);
+            core.info(`Modified terraform services: ${dirs}`);
+            for (let d of dirs) {
+                yield terra.executeTerraform(command, d);
+            }
+        }
+        else {
+            yield terra.executeTerraform(command, dir);
+        }
     }
     catch (err) {
         console.log(err);
@@ -129,20 +142,8 @@ exports.runFromComment = runFromComment;
 const runFromPR = (gh, terra) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Get PR number and modified files
-        const pr = github.context.payload.pull_request;
-        const prNumber = pr.number;
-        const files = yield gh.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: prNumber }));
-        // Get directories that have .tf files
-        let dirs = files.data
-            .map((file) => file.filename)
-            .filter((file) => file.endsWith('.tf'));
-        core.info(`Modified terraform files: ${dirs}`);
-        // remove dirs inside a module folder
-        dirs = dirs.filter((dir) => !dir.includes('modules'));
-        // Get only the directory path
-        dirs = dirs.map((dir) => dir.split('/').slice(0, -1).join('/'));
-        dirs = Array.from(new Set(dirs));
-        core.info(`Modified terraform directories: ${dirs}`);
+        let dirs = yield getModifiedServices(gh);
+        core.info(`Modified terraform services: ${dirs}`);
         // for each directory run terraform plan
         for (let d of dirs) {
             yield terra.executeTerraform(cmd_1.Commands.Plan, d);
@@ -155,6 +156,18 @@ const runFromPR = (gh, terra) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.runFromPR = runFromPR;
+const getModifiedServices = (gh) => __awaiter(void 0, void 0, void 0, function* () {
+    const pr = github.context.payload.pull_request;
+    const prNumber = pr.number;
+    const files = yield gh.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: prNumber }));
+    // Get directories that have a main.tf file
+    let services = files.data
+        .map((file) => file.filename)
+        .filter((file) => file.endsWith('main.tf'))
+        .filter((dir) => !dir.includes('modules'))
+        .map((dir) => dir.split('/').slice(0, -1).join('/'));
+    return Array.from(new Set(services));
+});
 
 
 /***/ }),
@@ -416,14 +429,14 @@ class Terraform {
                     core.startGroup('Terraform Apply');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
                     }
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
                     core.endGroup();
                 }));
@@ -466,14 +479,14 @@ class Terraform {
                     core.startGroup('Terraform Apply Destroy');
                     core.info(stdout);
                     if (err) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                     }
                     if (stderr) {
-                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
+                        const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy` failed', comment);
                     }
-                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false);
+                    const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply-destroy`', comment);
                     core.endGroup();
                 }));
@@ -542,7 +555,7 @@ const getCommand = (c) => {
 exports.getCommand = getCommand;
 const isCommand = (c) => {
     const command = c.match(/terraform\s(\w+)/);
-    return command ? true : false;
+    return !!command;
 };
 exports.isCommand = isCommand;
 
@@ -555,7 +568,7 @@ exports.isCommand = isCommand;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getWorkspace = exports.getDir = void 0;
+exports.isAllModified = exports.isAllServices = exports.getWorkspace = exports.getDir = void 0;
 const getDir = (c) => {
     const dir = c.match(/-d\s(\w+\S+(\w))/);
     return dir ? dir[1] : '';
@@ -566,6 +579,16 @@ const getWorkspace = (c) => {
     return workspace ? workspace[1] : '';
 };
 exports.getWorkspace = getWorkspace;
+// if --all is present, all services must be executed
+const isAllServices = (c) => {
+    return c.includes('--all');
+};
+exports.isAllServices = isAllServices;
+// if -m is present
+const isAllModified = (c) => {
+    return c.includes('--mod');
+};
+exports.isAllModified = isAllModified;
 
 
 /***/ }),

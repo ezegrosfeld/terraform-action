@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import {Client, Terraform} from './terraform';
 import {Commands, getCommand, isCommand} from './utils/cmd';
-import {getDir} from './utils/flags';
+import {getDir, isAllModified, isAllServices} from './utils/flags';
 
 export const runFromComment = async (
     body: string,
@@ -34,7 +34,18 @@ export const runFromComment = async (
             content: emoji
         });
 
-        await terra.executeTerraform(command, dir);
+        if (isAllServices(body)) {
+            // not implemented
+            throw new Error('not implemented')
+        } else if (isAllModified(body)) {
+            let dirs = await getModifiedServices(gh);
+            core.info(`Modified terraform services: ${dirs}`);
+            for (let d of dirs) {
+                await terra.executeTerraform(command, d);
+            }
+        } else {
+            await terra.executeTerraform(command, dir);
+        }
     } catch (err) {
         console.log(err);
         if (err instanceof Error) core.setFailed(err.message);
@@ -44,30 +55,9 @@ export const runFromComment = async (
 export const runFromPR = async (gh: Client, terra: Terraform) => {
     try {
         // Get PR number and modified files
-        const pr = github.context.payload.pull_request!;
-        const prNumber = pr.number;
+        let dirs = await getModifiedServices(gh)
 
-        const files = await gh.rest.pulls.listFiles({
-            ...github.context.repo,
-            pull_number: prNumber
-        });
-
-        // Get directories that have .tf files
-        let dirs = files.data
-            .map((file) => file.filename)
-            .filter((file) => file.endsWith('.tf'));
-
-        core.info(`Modified terraform files: ${dirs}`);
-
-        // remove dirs inside a module folder
-        dirs = dirs.filter((dir) => !dir.includes('modules'));
-
-        // Get only the directory path
-        dirs = dirs.map((dir) => dir.split('/').slice(0, -1).join('/'));
-
-        dirs = Array.from(new Set(dirs));
-
-        core.info(`Modified terraform directories: ${dirs}`);
+        core.info(`Modified terraform services: ${dirs}`);
 
         // for each directory run terraform plan
         for (let d of dirs) {
@@ -78,3 +68,22 @@ export const runFromPR = async (gh: Client, terra: Terraform) => {
         if (err instanceof Error) core.setFailed(err.message);
     }
 };
+
+const getModifiedServices = async (gh: Client): Promise<string[]> => {
+    const pr = github.context.payload.pull_request!;
+    const prNumber = pr.number;
+
+    const files = await gh.rest.pulls.listFiles({
+        ...github.context.repo,
+        pull_number: prNumber,
+    });
+
+    // Get directories that have a main.tf file
+    let services = files.data
+        .map((file) => file.filename)
+        .filter((file) => file.endsWith('main.tf'))
+        .filter((dir) => !dir.includes('modules'))
+        .map((dir) => dir.split('/').slice(0, -1).join('/'));
+
+    return Array.from(new Set(services))
+}
