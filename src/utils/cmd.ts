@@ -26,5 +26,5 @@ export const getCommand = (c: string): Commands => {
 
 export const isCommand = (c: string): boolean => {
 	const command = c.match(/terraform\s(\w+)/);
-	return command ? true : false;
+	return !!command;
 };
