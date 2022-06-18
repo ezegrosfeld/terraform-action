@@ -158,7 +158,7 @@ const runFromPR = (gh, terra) => __awaiter(void 0, void 0, void 0, function* () 
 exports.runFromPR = runFromPR;
 const getModifiedServices = (gh) => __awaiter(void 0, void 0, void 0, function* () {
     const pr = github.context.payload.pull_request;
-    const prNumber = pr.number;
+    const prNumber = typeof pr !== 'undefined' ? pr.number : github.context.issue.number;
     const files = yield gh.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: prNumber }));
     // Get directories that have a main.tf file
     let services = files.data

@@ -71,7 +71,7 @@ export const runFromPR = async (gh: Client, terra: Terraform) => {
 
 const getModifiedServices = async (gh: Client): Promise<string[]> => {
     const pr = github.context.payload.pull_request!;
-    const prNumber = pr.number;
+    const prNumber = typeof pr !== 'undefined' ? pr.number : github.context.issue.number;
 
     const files = await gh.rest.pulls.listFiles({
         ...github.context.repo,
