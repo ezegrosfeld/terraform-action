@@ -181,11 +181,13 @@ export class Terraform {
                     if (err) {
                         const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                         await this.#createComment('Terraform `apply` failed', comment);
+                        return
                     }
 
                     if (stderr) {
                         const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
                         await this.#createComment('Terraform `apply` failed', comment);
+                        return
                     }
 
                     const comment = this.#buildOutputDetails(stdout, false, this.#workspace, chdir);
