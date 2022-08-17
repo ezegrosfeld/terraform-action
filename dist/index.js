@@ -431,10 +431,12 @@ class Terraform {
                     if (err) {
                         const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
+                        return;
                     }
                     if (stderr) {
                         const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                         yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply` failed', comment);
+                        return;
                     }
                     const comment = __classPrivateFieldGet(this, _Terraform_buildOutputDetails, "f").call(this, stdout, false, __classPrivateFieldGet(this, _Terraform_workspace, "f"), chdir);
                     yield __classPrivateFieldGet(this, _Terraform_createComment, "f").call(this, 'Terraform `apply`', comment);
